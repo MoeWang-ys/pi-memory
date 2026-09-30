@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700" role="img" aria-label="记忆中心架构图：前端接入、记忆引擎、可插拔推理后端">
+  <defs>
+    <linearGradient id="paper2" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#FBF8F2"/>
+      <stop offset="100%" stop-color="#F2EBDE"/>
+    </linearGradient>
+    <linearGradient id="terraT" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C04A1A"/><stop offset="100%" stop-color="#DA7A44"/>
+    </linearGradient>
+    <linearGradient id="tealT" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1F4E4A"/><stop offset="100%" stop-color="#357F76"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8A6A4E"/>
+    </marker>
+    <marker id="arrT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#C04A1A"/>
+    </marker>
+    <filter id="sh2" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#5A4632" flood-opacity="0.12"/>
+    </filter>
+    <pattern id="grid2" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M30 0H0V30" fill="none" stroke="#5A4632" stroke-width="0.6" opacity="0.05"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="700" fill="url(#paper2)"/>
+  <rect width="1200" height="700" fill="url(#grid2)"/>
+
+  <text x="600" y="52" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="58" font-weight="800" fill="#2B2118">Memory Center · Architecture</text>
+  <text x="600" y="80" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="14.5" fill="#8A7A66">Frontends just wire up; the engine does the work; backends are pluggable</text>
+
+  <!-- ============ 第一层：前端 ============ -->
+  <g transform="translate(0,112)">
+    <text x="60" y="16" font-family="ui-sans-serif,-apple-system,'PingFang SC',sans-serif"
+          font-size="12.5" font-weight="700" fill="#A89277" letter-spacing="2">FRONTENDS</text>
+
+    <g filter="url(#sh2)">
+      <rect x="60" y="34" width="300" height="86" rx="16" fill="#FFFFFF"/>
+      <rect x="60" y="34" width="300" height="86" rx="16" fill="none" stroke="#1F4E4A" stroke-opacity="0.18"/>
+      <circle cx="94" cy="77" r="17" fill="url(#tealT)" opacity="0.14"/>
+      <text x="94" y="83" text-anchor="middle" font-size="15" font-family="ui-sans-serif,-apple-system,sans-serif"
+            font-weight="700" fill="#1F4E4A">pi</text>
+      <text x="126" y="70" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="16.5" font-weight="700" fill="#2B2118">pi CLI extension</text>
+      <text x="126" y="94" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#7A6B58">4 tools + 3 hooks + /memory</text>
+    </g>
+
+    <g filter="url(#sh2)">
+      <rect x="402" y="34" width="300" height="86" rx="16" fill="#FFFFFF"/>
+      <rect x="402" y="34" width="300" height="86" rx="16" fill="none" stroke="#1F4E4A" stroke-opacity="0.18"/>
+      <circle cx="436" cy="77" r="17" fill="url(#tealT)" opacity="0.14"/>
+      <text x="436" y="83" text-anchor="middle" font-size="13" font-family="ui-sans-serif,-apple-system,sans-serif"
+            font-weight="700" fill="#1F4E4A">PD</text>
+      <text x="468" y="70" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="16.5" font-weight="700" fill="#2B2118">PI-Desktop plugin</text>
+      <text x="468" y="94" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#7A6B58">Single Memory tool, dispatched by action</text>
+    </g>
+
+    <!-- 说明：前端不做计算 -->
+    <g transform="translate(744,34)">
+      <rect x="0" y="0" width="396" height="86" rx="16" fill="#C04A1A" opacity="0.07"/>
+      <rect x="0" y="0" width="4" height="86" rx="2" fill="url(#terraT)"/>
+      <text x="22" y="34" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14" font-weight="700" fill="#8E3E1C">Frontends only wire things up</text>
+      <text x="22" y="58" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#7A6350">No vector math, no storage</text>
+      <text x="22" y="77" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#7A6350">Swap frontends without touching data</text>
+    </g>
+  </g>
+
+  <!-- 竖向连接 -->
+  <path d="M600 232 V 268" stroke="#8A6A4E" stroke-width="2" marker-end="url(#arr)" opacity="0.8"/>
+  <text x="616" y="255" font-family="ui-sans-serif,-apple-system,sans-serif"
+        font-size="12.5" fill="#8A7A66">HTTP 127.0.0.1:8970</text>
+
+  <!-- ============ 第二层：引擎 ============ -->
+  <g transform="translate(0,278)">
+    <text x="60" y="16" font-family="ui-sans-serif,-apple-system,'PingFang SC',sans-serif"
+          font-size="12.5" font-weight="700" fill="#A89277" letter-spacing="2">ENGINE</text>
+
+    <rect x="60" y="34" width="1080" height="196" rx="20" fill="#FFFFFF" opacity="0.72" filter="url(#sh2)"/>
+    <rect x="60" y="34" width="1080" height="196" rx="20" fill="none" stroke="#C04A1A" stroke-opacity="0.22"/>
+
+    <!-- 引擎内部四块 -->
+    <g font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif">
+      <rect x="92" y="72" width="228" height="126" rx="14" fill="#1F4E4A" opacity="0.09"/>
+      <text x="112" y="104" font-size="16" font-weight="700" fill="#1F4E4A">Extract</text>
+      <text x="112" y="130" font-size="12.8" fill="#6B5A47">Reads the turn, finds</text>
+      <text x="112" y="150" font-size="12.8" fill="#6B5A47">what's worth keeping</text>
+      <text x="112" y="178" font-size="11.5" fill="#9A8A76">Runs every turn, automatically</text>
+
+      <rect x="344" y="72" width="228" height="126" rx="14" fill="#1F4E4A" opacity="0.09"/>
+      <text x="364" y="104" font-size="16" font-weight="700" fill="#1F4E4A">Embed</text>
+      <text x="364" y="130" font-size="12.8" fill="#6B5A47">text → 1024-dim vector</text>
+      <text x="364" y="150" font-size="12.8" fill="#6B5A47">a coordinate in semantic space</text>
+      <text x="364" y="178" font-size="11.5" fill="#9A8A76">the model sets the dim</text>
+
+      <rect x="596" y="72" width="228" height="126" rx="14" fill="#C04A1A" opacity="0.09"/>
+      <text x="616" y="104" font-size="16" font-weight="700" fill="#8E3E1C">Retrieve</text>
+      <text x="616" y="130" font-size="12.8" fill="#6B5A47">Find nearest by meaning</text>
+      <text x="616" y="150" font-size="12.8" fill="#6B5A47">Rank + cliff cutoff</text>
+      <text x="616" y="178" font-size="11.5" fill="#9A8A76">Not keyword matching</text>
+
+      <rect x="848" y="72" width="260" height="126" rx="14" fill="#C04A1A" opacity="0.09"/>
+      <text x="868" y="104" font-size="16" font-weight="700" fill="#8E3E1C">Store</text>
+      <text x="868" y="130" font-size="12.8" fill="#6B5A47">Persisted to SQLite</text>
+      <text x="868" y="150" font-size="12.8" fill="#6B5A47">semantic dedup (cos ≥ 0.95)</text>
+      <text x="868" y="178" font-size="11.5" fill="#9A8A76">never writes the same fact twice</text>
+    </g>
+
+    <!-- 引擎内部流向箭头 -->
+    <g stroke="#8A6A4E" stroke-width="1.8" opacity="0.55" marker-end="url(#arr)">
+      <path d="M322 135 H 340"/>
+      <path d="M574 135 H 592"/>
+      <path d="M826 135 H 844"/>
+    </g>
+  </g>
+
+  <!-- 竖向连接 -->
+  <path d="M600 508 V 544" stroke="#8A6A4E" stroke-width="2" marker-end="url(#arr)" opacity="0.8"/>
+
+  <!-- ============ 第三层：provider 抽象层 ============ -->
+  <g transform="translate(0,552)">
+    <g filter="url(#sh2)">
+      <rect x="330" y="0" width="540" height="62" rx="16" fill="#C04A1A" opacity="0.13" stroke="#C04A1A" stroke-opacity="0.35"/>
+      <text x="600" y="27" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="16.5" font-weight="800" fill="#8E3E1C">provider abstraction · pluggable</text>
+      <text x="600" y="48" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12.5" fill="#8A6A50">Swap backends with one config line — no code changes</text>
+    </g>
+
+    <!-- 分叉 -->
+    <path d="M470 62 V 82 H 300 V 100" stroke="#8A6A4E" stroke-width="2" fill="none" marker-end="url(#arr)" opacity="0.75"/>
+    <path d="M730 62 V 82 H 900 V 100" stroke="#8A6A4E" stroke-width="2" fill="none" marker-end="url(#arr)" opacity="0.75"/>
+  </g>
+
+  <!-- ============ 第四层：两个后端 ============ -->
+  <g transform="translate(0,656)">
+    <g filter="url(#sh2)">
+      <rect x="130" y="-42" width="342" height="62" rx="15" fill="#FFFFFF" stroke="#1F4E4A" stroke-opacity="0.28"/>
+      <text x="150" y="-18" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="15.5" font-weight="700" fill="#1F4E4A">LM Studio local</text>
+      <text x="150" y="2" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12.5" fill="#7A6B58">Free · private · self-healing</text>
+    </g>
+    <g filter="url(#sh2)">
+      <rect x="730" y="-42" width="342" height="62" rx="15" fill="#FFFFFF" stroke="#C04A1A" stroke-opacity="0.28"/>
+      <text x="750" y="-18" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="15.5" font-weight="700" fill="#8E3E1C">Any OpenAI-compatible</text>
+      <text x="750" y="2" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12.5" fill="#7A6B58">SiliconFlow · DeepSeek · Ollama</text>
+    </g>
+  </g>
+</svg>

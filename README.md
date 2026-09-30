@@ -1,246 +1,244 @@
-# pi 记忆中心
+# Memory Center
 
-<img src="docs/assets/hero.svg" alt="pi 记忆中心 —— 给 AI 一个跨会话的长期记忆" width="100%" />
+[English](README.md) · [中文](README.zh-CN.md)
 
-> 给你的 AI 助手接一个**跨会话的长期记忆**——你说过的偏好、定过的事、踩过的坑，它下次还记得。
+<img src="docs/assets/hero-en.svg" alt="Memory Center — cross-session long-term memory for your AI assistant" width="100%" />
+
+> Give your AI assistant a **cross-session memory** — the preferences you stated, the decisions you made, the pitfalls you hit. Next time, it remembers.
 
 ---
 
-## 它解决什么问题
+## The problem
 
-你现在每次开新会话，AI 都是从零开始：
+Every new session, your AI starts from zero:
 
-- 你说过"回答我用中文"——下次它又飚英文
-- 你讲了半小时的业务背景——换个窗口就得再讲一遍
-- 你上周定的技术方案——这周它又提了个完全相反的
-- 你踩过的坑、总结的经验——散在几十个会话里，永远找不回来
+- You said "answer me in Chinese" — next session it's back to English
+- You spent half an hour explaining your business context — new window, explain it again
+- You settled a technical decision last week — this week it proposes the opposite
+- Your hard-won lessons are scattered across dozens of conversations, unfindable
 
-**根本原因**：AI 的上下文是易失的，会话结束就清空。你不会每次都重新介绍自己的同事，但你的 AI 每次都像个新来的。
+**The root cause**: an LLM's context is volatile. The conversation ends, it's wiped. You don't re-introduce yourself to a colleague every morning — but your AI meets a stranger every time.
 
-## 装完之后是什么效果
+## What you get
 
-<img src="docs/assets/flow.svg" alt="记忆的写入与读取流程" width="100%" />
+<img src="docs/assets/flow-en.svg" alt="How memories are written and read" width="100%" />
 
 | | |
 |---|---|
-| **自动的** | 不用手动记。每轮对话后台自动抽取"值得记住的东西" |
-| **能搜的** | 不是关键词匹配，是**语义**检索。"怎么优化速度"能搜到"性能调优"那条 |
-| **有分类的** | `fact` 事实 / `preference` 偏好 / `goal` 目标 / `decision` 决定 / `knowledge` 知识 |
-| **全本地的** | 用本地方案时，一个字都不出你的电脑 |
-| **不会重复的** | 语义去重（cos ≥ 0.95），同一件事不会存八遍 |
-| **自己会活** | 模型崩了自动拉起，服务挂了自动重启 |
+| **Automatic** | Nothing to remember by hand. Every turn, the memory is extracted in the background |
+| **Semantic** | Not keyword matching. "how do I make it faster" finds the "performance tuning" memory |
+| **Categorized** | `fact` / `preference` / `goal` / `decision` / `knowledge` |
+| **Local-first** | On the local path, not a single character leaves your machine |
+| **Deduplicated** | Semantic dedup (cos ≥ 0.95) — the same fact never gets stored eight times |
+| **Self-healing** | Model gets unloaded, it reloads it. Service crashes, it restarts |
 
-**实测数据**（作者实例）：387 条记忆，全部 1024 维，检索 top 相似度稳定在 0.64~0.80。
+**Measured on the author's instance**: 387 memories, all 1024-dim, top retrieval similarity steady at 0.64–0.80.
 
-## 它是怎么工作的
+## How it works
 
-**写**：每轮对话后，后台把对话交给抽取模型 —— 「这里面有什么事值得以后记住？」→ 变成向量存起来。
-**读**：新会话时，把当前任务也变成向量 → 找出**距离最近**的几条 → 就是语义最相关的旧记忆。
+**Write**: after each turn, the conversation goes to an extraction model — "anything here worth remembering later?" → becomes a vector, gets stored.
+**Read**: on a new session, your current task becomes a vector too → the **nearest** few are found → those are the semantically relevant memories.
 
 ```mermaid
 flowchart LR
-    C["你的对话"]
-    subgraph W["写入（后台自动）"]
+    C["Your conversation"]
+    subgraph W["Write (automatic, background)"]
         direction TB
-        E1["抽取<br/>找出值得记住的事"]
-        E2["向量化<br/>文字 → 1024 维向量"]
-        E3["去重 + 存储<br/>cos ≥ 0.95 视为重复"]
+        E1["Extract<br/>find what's worth keeping"]
+        E2["Embed<br/>text → 1024-dim vector"]
+        E3["Dedup + store<br/>cos ≥ 0.95 = duplicate"]
         E1 --> E2 --> E3
     end
-    subgraph R["读取（开新会话时）"]
+    subgraph R["Read (on a new session)"]
         direction TB
-        R1["检索<br/>拿当前任务当 query"]
-        R2["排序过滤<br/>丢掉低分的 · 断崖处截断"]
+        R1["Retrieve<br/>use the current task as query"]
+        R2["Rank + filter<br/>drop low scores, cut at the cliff"]
         R1 --> R2
     end
-    DB["SQLite 记忆库"]
-    C -->|写| E1
+    DB["SQLite memory store"]
+    C -->|write| E1
     E3 --> DB
     DB --> R1
-    R2 -->|相关记忆注入上下文| C
+    R2 -->|inject relevant memories| C
 ```
 
-**为什么用向量而不是关键词？** 因为你问「怎么让它别老崩」时，记忆里存的是「服务稳定性加固」——一个词都对不上，但意思是一回事。向量能抓住这个。
+**Why vectors and not keywords?** You ask "how do I stop it crashing" while the memory says "service stability hardening" — not one word matches, but they mean the same thing. Vectors catch that.
 
-### 整体架构
+### Architecture
 
-<img src="docs/assets/architecture.svg" alt="记忆中心架构：前端接入、记忆引擎、可插拔推理后端" width="100%" />
+<img src="docs/assets/architecture-en.svg" alt="Memory Center architecture: frontends, engine, pluggable inference backends" width="100%" />
 
-**关键设计：推理后端是可插拔的。** 本地 LM Studio 和云端 API 走同一个抽象层，改一行配置就能切。
+**The key design: the inference backend is pluggable.** Local LM Studio and cloud APIs sit behind the same abstraction layer — one line of config switches between them.
 
-## 开始用
+## Getting started
 
 ```bash
-git clone <repo> && cd pi-web-extensions/memory-server
+git clone https://github.com/MoeWang-ys/pi-web-extensions.git
+cd pi-web-extensions/memory-server
 ./install.sh
 ```
 
-`install.sh` 会自动找 Python、建虚拟环境、装依赖，然后跑一个**交互式向导**：它会探测你机器上有什么（LM Studio / Ollama / 云端），把可用模型列出来让你选，实测维度，验证连通性，最后写好配置。
+`install.sh` finds Python, creates a virtualenv, installs dependencies, then runs an **interactive wizard**: it probes what's on your machine (LM Studio / Ollama / cloud), lists the available models for you to pick, measures the real embedding dimension, verifies connectivity, and writes the config.
 
-### 两条路，任选
+### Two paths, pick one
 
-| | **A：本地模型** | **B：云端 API** |
+| | **A: Local models** | **B: Cloud API** |
 |---|---|---|
-| 成本 | 免费 | 很便宜 |
-| 隐私 | ✅ 全在本地 | ❌ 上传到服务商 |
-| 硬件 | 需 ~8GB 内存 | 无要求 |
-| 适合 | Mac / 在意隐私 | 5 分钟跑起来 |
+| Cost | Free | Very cheap |
+| Privacy | ✅ Stays on your machine | ❌ Uploaded to the provider |
+| Hardware | ~8GB RAM for models | None |
+| Best for | Macs, privacy-minded | Running in 5 minutes |
 
-**A**：装 [LM Studio](https://lmstudio.ai) → 启动它的服务（`127.0.0.1:1234`）→ 下两个模型 → 跑 `./install.sh`
+**A**: Install [LM Studio](https://lmstudio.ai) → start its server (`127.0.0.1:1234`) → download two models → run `./install.sh`
 
-**B**：跑 `./install.sh` → 向导里选"云端" → 选服务商 → 填 Key
+**B**: Run `./install.sh` → choose "cloud" in the wizard → pick a provider → paste your key
 
-### 启动
+Or skip the key in the file entirely and use environment variables (recommended, keeps secrets out of config):
 
 ```bash
-nohup ./run.sh &                                    # 后台常驻
-curl -s http://127.0.0.1:8970/api/health            # 看到 ok:true 就成了
+export MEMORY_EMBEDDING_API_KEY="sk-xxx"
+export MEMORY_EXTRACT_API_KEY="sk-xxx"
 ```
 
----
+### Start it
 
-## 选模型（唯一需要动脑的地方）
+```bash
+nohup ./run.sh &                                    # run persistently
+curl -s http://127.0.0.1:8970/api/health            # look for "ok": true
+```
 
-向导会问你两次，这两个模型的选法**完全不同**：
+## Choosing models (the only part that needs thought)
 
-### 向量化模型 —— 决定"能不能搜到"
+The wizard asks you twice. These two models are chosen in **completely different** ways.
 
-| 模型 | 中文 | 说明 |
-|---|---|---|
-| **`bge-m3`** (1024维) | ⭐⭐⭐⭐⭐ | **中文首选**，开源最强多语言向量模型之一 |
-| `nomic-embed-text` (768维) | ⭐⭐ | 轻量，但**中文区分度差**——中文句全挤在 0.99，检索基本失效 |
-| `text-embedding-3-small` | ⭐⭐⭐⭐ | OpenAI，质量好，要付费 |
+### Embedding model — decides whether search works at all
 
-> ⚠️ **中文场景别用英文向模型**，这是最常见的翻车原因。
+| Model | Dim | Chinese | Notes |
+|---|---|---|---|
+| **`bge-m3`** | 1024 | ⭐⭐⭐⭐⭐ | **Best for Chinese**. One of the strongest open multilingual embedding models |
+| `nomic-embed-text` | 768 | ⭐⭐ | Lightweight, but **poor Chinese discrimination** — Chinese sentences all collapse into 0.99 similarity, and retrieval effectively fails |
+| `text-embedding-3-small` | 1536 | ⭐⭐⭐⭐ | OpenAI, good quality, paid |
 
-### 抽取模型 —— 决定"记得准不准"
+> ⚠️ **Don't use an English-oriented model for Chinese.** This is the single most common failure.
 
-**它每条对话都要跑一次，所以成本敏感。**
+### Extraction model — decides how *accurately* it remembers
+
+**It runs on every single turn, so cost matters.**
 
 | | |
 |---|---|
-| ✅ 本地 7B 小模型 | 免费、隐私、质量足够 |
-| ✅ DeepSeek 这类便宜云模型 | 几分钱 |
-| ❌ GPT-4 / Claude Opus | **账单会爆炸** |
+| ✅ A local 7B model | Free, private, good enough |
+| ✅ A cheap cloud model (DeepSeek etc.) | Fractions of a cent |
+| ❌ GPT-4 / Claude Opus | **Your bill will explode** |
 
-### ⚠️ 换向量模型的铁律
+### ⚠️ The iron rule when changing embedding models
 
-换模型后**已有记忆全部失效**（新旧向量不在同一坐标系），必须重建索引：
+Change the model and **all existing memories become invalid** (old and new vectors don't live in the same coordinate space). You must rebuild the index:
 
 ```bash
 .venv/bin/python reembed.py
 ```
 
-服务启动时会自动检测维度不匹配并告警。另外去重阈值要跟着重标：`bge-m3` → `0.95`，`nomic` → `0.88`。
+The service checks for dimension mismatches on startup and warns you. The dedup threshold must also be recalibrated: `bge-m3` → `0.95`, `nomic` → `0.88`.
 
----
+## Connecting to your tools
 
-## 接到你的工具上
-
-引擎跑起来后，选一个前端：
+Once the engine is running, pick a frontend:
 
 <details>
-<summary><b>pi CLI 扩展</b>（4 个工具 + 3 个钩子 + /memory 命令）</summary>
+<summary><b>pi CLI extension</b> (4 tools + 3 hooks + a <code>/memory</code> command)</summary>
 
 ```bash
 ln -s "$(pwd)/memory-extension/index.ts" ~/.pi/agent/extensions/memory.ts
 ```
-然后在 pi 里 `/reload`。用软链是为了改源码立即生效。
+Then `/reload` inside pi. Symlink rather than copy, so source edits take effect immediately.
 </details>
 
 <details>
-<summary><b>PI-Desktop 插件</b>（单一 Memory 工具，action 分派）</summary>
+<summary><b>PI-Desktop plugin</b> (single <code>Memory</code> tool, dispatched by <code>action</code>)</summary>
 
 ```bash
 cd pi-memory && pi-plugin pack .     # → dist/local.pi-memory-<ver>.piplug
 ```
-在 PI-Desktop 里安装这个文件。支持 `recall` / `search` / `remember` / `extract` / `list` / `forget` / `status`。
+Install that file in PI-Desktop. Supports `recall` / `search` / `remember` / `extract` / `list` / `forget` / `status`.
 </details>
 
----
-
-## 目录
+## Layout
 
 ```
-memory-server/       记忆引擎（核心，必需）
-├── providers.py     推理后端抽象层 ← 双后端的关键
-├── app.py           FastAPI 服务 + 全部端点
-├── extractor.py     抽取   embedder.py   向量化
-├── retrieval.py     检索   store.py      SQLite
-├── stability.py     模型自愈守护
-├── setup.py         交互向导
-├── install.sh       一键安装
-└── run.sh           守护启动器
+memory-server/       the engine (core, required)
+├── providers.py     inference backend abstraction ← the dual-backend key
+├── app.py           FastAPI service + all endpoints
+├── extractor.py     extraction    embedder.py    embedding
+├── retrieval.py     retrieval     store.py       SQLite
+├── stability.py     model self-healing daemon
+├── setup.py         interactive wizard
+├── install.sh       one-command install
+└── run.sh           watchdog launcher
 
-memory-extension/    pi CLI 前端
-pi-memory/           PI-Desktop 前端
-tts-server/          语音合成（独立组件）
-wal-extension/       其他扩展（独立组件）
+memory-extension/    pi CLI frontend
+pi-memory/           PI-Desktop frontend
+tts-server/          text-to-speech (standalone)
+wal-extension/       other extensions (standalone)
 ```
 
----
+## FAQ
 
-## 常见问题
-
-<details><summary><b>服务起不来 / 端口被占用</b></summary>
+<details><summary><b>Service won't start / port already in use</b></summary>
 
 ```bash
 lsof -tiTCP:8970 -sTCP:LISTEN | xargs -r kill -9 && nohup ./run.sh &
 ```
 </details>
 
-<details><summary><b>macOS 报 <code>pydantic_core</code> 架构不匹配</b></summary>
+<details><summary><b>macOS: <code>pydantic_core</code> architecture mismatch</b></summary>
 
-系统 Python 是 x86_64 混编但机器是 arm64。加 `arch -arm64` 前缀。`install.sh` 和 `run.sh` 已自动处理。
+Your system Python is x86_64 but the machine is arm64. Prefix with `arch -arm64`. Both `install.sh` and `run.sh` handle this automatically.
 </details>
 
-<details><summary><b>检索结果很差 / 搜不到</b></summary>
+<details><summary><b>Retrieval is bad / nothing is found</b></summary>
 
-按顺序排查：
-1. 向量模型是不是英文向的？（`nomic` 做中文）→ 换 `bge-m3`
-2. 维度匹配吗？看 `/api/health` 或启动日志
-3. 换过模型但没跑 `reembed.py`？
-4. 历史对话没处理过？→ `backfill.py`
+In order:
+1. Is your embedding model English-oriented? (`nomic` for Chinese) → switch to `bge-m3`
+2. Do the dimensions match? Check `/api/health` or the startup log
+3. Changed models without running `reembed.py`?
+4. Never processed your history? → `backfill.py`
 </details>
 
-<details><summary><b>报 502 / 连接被劫持</b></summary>
+<details><summary><b>502 / connections being hijacked</b></summary>
 
-系统代理把 `127.0.0.1` 也代理走了。代码已强制 `trust_env=False`，自己写脚本调用时记得同样处理。
+A system proxy is routing `127.0.0.1` too. The code forces `trust_env=False`; do the same if you write your own client.
 </details>
 
-<details><summary><b>模型被卸载（<code>Model is unloaded</code>）</b></summary>
+<details><summary><b><code>Model is unloaded</code></b></summary>
 
-引擎自带守护线程，每 60 秒巡检、自动拉起。若还反复掉，把 `ttl_seconds` 设为 `0`（常驻）。
+A self-healing daemon polls every 60s and reloads it. If it still flaps, set `ttl_seconds` to `0` (resident).
 
-历史踩坑：`ttl_seconds: 3600` 和 LM Studio 全局 `jitModelTTL`（1 小时）同时到期，导致每小时模型被卸了又拉。
+Past incident: `ttl_seconds: 3600` and LM Studio's global `jitModelTTL` (1 hour) expired together, so the model was unloaded and reloaded every hour.
 </details>
 
-<details><summary><b>抽取返回空 / 拿不到 JSON</b></summary>
+<details><summary><b>Extraction returns empty / no JSON</b></summary>
 
-`max_tokens` 给小了。reasoning 型模型需要 `3000` 以上。
+`max_tokens` is too small. Reasoning models need `3000`+ or the JSON gets truncated.
 </details>
 
----
-
-## 维护
+## Maintenance
 
 ```bash
-./run.sh                    # 前台（崩溃自动重启）
-nohup ./run.sh &            # 后台常驻
-.venv/bin/python reembed.py # 重建索引（换向量模型后必须）
-.venv/bin/python backfill.py --min-chars 150 --chunk 12   # 补处理历史对话
-./install.sh                # 重新配置（自动备份旧配置）
+./run.sh                    # foreground (auto-restart on crash)
+nohup ./run.sh &            # background, persistent
+.venv/bin/python reembed.py # rebuild index (required after changing embedding model)
+.venv/bin/python backfill.py --min-chars 150 --chunk 12   # process conversation history
+./install.sh                # reconfigure (backs up the old config)
 ```
 
----
+## Design notes
 
-## 为什么这样设计
+**Why not reuse the AI tool's own model config?**
+That's usually your flagship model — expensive. But **extraction runs on every turn**: chatting is "ask once, answer once", extraction is "runs in the background every turn". Different order of magnitude. And extraction is just information classification — a small model is plenty. So it's a separate config, but it supports any OpenAI-compatible endpoint.
 
-**为什么不用 AI 工具自带的模型配置？**
-自带的通常是你的主力模型，很贵。但**抽取是每轮对话都要跑的**——聊天是"一问一答"，抽取是"每轮后台都跑"，量级差很多。而且抽取只是信息分类，小模型足够。所以独立配置，但支持任意 OpenAI 兼容端点。
-
-**为什么 LM Studio 是"第一公民"？**
-它是唯一提供模型生命周期管理的（加载/常驻/自动拉起）——纯 API 端点没这能力。用云端时守护线程自动关闭，不做无用探测。
+**Why is LM Studio a "first-class citizen"?**
+It's the only backend offering model lifecycle management (load / keep resident / auto-reload) — a bare API endpoint can't do that. Under a cloud provider the watchdog daemon shuts itself off rather than doing pointless probing.
 
 ## License
 
