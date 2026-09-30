@@ -51,15 +51,29 @@
 
 ## 装起来有多快
 
+### 方式 A：npm（一条命令）
+
+```bash
+pi install npm:pi-memory
+```
+
+postinstall 脚本会自己找 Python、建虚拟环境、装依赖，然后跑一个**交互式向导**：探测你机器上有什么（LM Studio / Ollama / 云端），把能用的模型列出来让你选，实测维度、验证连通，最后写好配置。
+
+npm 包里是 pi 扩展 + skills。**引擎**（Python 服务）在主仓库里 —— postinstall 脚本会自动找到你克隆的引擎目录，没找到就告诉你克隆命令。
+
+然后启动引擎（脚本会打印确切路径）：
+
+```bash
+cd <引擎目录> && nohup ./run.sh &
+```
+
+### 方式 B：从源码
+
 ```bash
 git clone https://github.com/MoeWang-ys/pi-web-extensions.git
 cd pi-web-extensions/memory-server
 ./install.sh
 ```
-
-`install.sh` 会自己找 Python、建虚拟环境、装依赖，然后跑一个**交互式向导**：探测你机器上有什么（LM Studio / Ollama / 云端），把能用的模型列出来让你选，实测维度、验证连通，最后写好配置。
-
-装完 `nohup ./run.sh &`，就一直在后台待着了。
 
 ### 两条路，任选
 
