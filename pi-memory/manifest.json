@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "local.pi-memory",
+  "name": "记忆中心",
+  "version": "0.1.0",
+  "description": "接入本地 pi 记忆中心（memory-server，默认 127.0.0.1:8970）：跨会话语义检索、注入上下文、写入与删除记忆。",
+  "author": "PI-Desktop User",
+  "main": "main.js",
+  "net": {
+    "domains": ["127.0.0.1", "localhost"]
+  },
+  "contributes": {
+    "agentTools": [
+      {
+        "name": "Memory",
+        "description": "Call the local pi memory center (memory-server on 127.0.0.1:8970) to recall or store cross-session memories. Call ToolSearch for \"memory\" or \"记忆\" to load this tool.",
+        "risk": "medium",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": ["search", "recall", "remember", "extract", "list", "forget", "status"],
+              "description": "search = semantic search; recall = retrieval tailored for prompt injection; remember = add one memory; extract = pull memories out of a conversation; list = browse recent memories; forget = delete by id; status = server health and stats."
+            },
+            "query": {
+              "type": "string",
+              "description": "Search text for action=search / action=recall."
+            },
+            "content": {
+              "type": "string",
+              "description": "Memory body for action=remember."
+            },
+            "category": {
+              "type": "string",
+              "enum": ["fact", "preference", "goal", "decision", "knowledge"],
+              "description": "Memory category, used by remember and as a filter for list."
+            },
+            "source": {
+              "type": "string",
+              "enum": ["memory", "knowledge"],
+              "description": "Restrict search to the personal memory store or the imported knowledge base."
+            },
+            "id": {
+              "type": "string",
+              "description": "Memory id for action=forget."
+            },
+            "messages": {
+              "type": "array",
+              "description": "Conversation messages ([{role, content}]) for action=extract.",
+              "items": { "type": "object" }
+            },
+            "project": {
+              "type": "string",
+              "description": "Project tag recorded with extracted memories."
+            },
+            "session_id": {
+              "type": "string",
+              "description": "Session tag recorded with extracted memories."
+            },
+            "n": {
+              "type": "number",
+              "description": "Max results for action=search (default 8)."
+            },
+            "limit": {
+              "type": "number",
+              "description": "Max rows for action=list (default 20, server cap 500)."
+            }
+          },
+          "required": ["action"]
+        }
+      }
+    ],
+    "settings": [
+      {
+        "key": "baseUrl",
+        "type": "string",
+        "title": "记忆中心地址",
+        "default": "http://127.0.0.1:8970"
+      }
+    ]
+  },
+  "permissions": ["agent.tool.register", "net.fetch"],
+  "engines": {
+    "piDesktop": ">=0.1.0"
+  },
+  "activationEvents": ["onStartup"]
+}

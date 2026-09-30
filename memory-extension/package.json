@@ -1,0 +1,12 @@
+{
+  "name": "pi-memory-extension",
+  "version": "0.1.0",
+  "description": "pi 跨会话记忆 + 知识库扩展 (配合 memory-server)",
+  "main": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

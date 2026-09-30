@@ -1,0 +1,12 @@
+{
+  "name": "pi-wal-extension",
+  "version": "0.1.0",
+  "description": "pi 用户消息前置落盘(WAL)扩展: 绕开 session-manager 的 'no-assistant 不落盘' 守卫",
+  "main": "index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

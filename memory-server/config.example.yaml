@@ -1,0 +1,67 @@
+# pi 记忆中心 —— 配置文件
+#
+# 首次使用建议运行交互式向导：./setup.py
+# 它会自动探测本机可用的推理后端（LM Studio / Ollama / 云端 API）并生成此文件。
+#
+# provider 取值：
+#   lmstudio — 本地 LM Studio（零成本、隐私，带自愈守护）
+#   openai   — 任意 OpenAI 兼容端点（OpenAI / DeepSeek / 硅基流动 / Ollama / vLLM ...）
+
+server:
+  host: 127.0.0.1
+  port: 8970
+
+# ============ 向量化模型 ============
+# 注意：dim（维度）由模型决定，换模型后必须运行 `python reembed.py` 重建索引，
+#       否则旧向量与新模型不兼容，检索会出错（服务启动时会检测并告警）。
+embedding:
+  provider: lmstudio
+  base_url: http://127.0.0.1:1234/v1
+  # 中文推荐 text-embedding-bge-m3（1024 维）；轻量可用 nomic-embed-text-v1.5（768 维）
+  # 云端示例（硅基流动）：model: BAAI/bge-m3, base_url: https://api.siliconflow.cn/v1
+  model: text-embedding-bge-m3
+  dim: 1024
+  api_key: ""                # 云端需要；也可写 ${MEMORY_EMBEDDING_API_KEY} 从环境变量读
+  ttl_seconds: 0             # 0 = 常驻不卸载（仅 lmstudio 有意义）
+  batch_size: 16
+  auto_load: true            # 仅 lmstudio：服务启动/模型被卸载时自动拉起
+  timeout: 120
+
+# ============ 记忆抽取模型 ============
+# 每次对话后台调用，建议用便宜/本地的小模型，不要用昂贵的旗舰模型。
+extract:
+  provider: lmstudio
+  base_url: http://127.0.0.1:1234/v1
+  model: 你的抽取模型名  # 留空则由 setup.py 帮你选
+  api_key: ""                # 也可写 ${MEMORY_EXTRACT_API_KEY}
+  temperature: 0.2
+  max_tokens: 3000           # reasoning 型模型需足够大，否则 JSON 还没输出就被截断
+  auto_load: true
+  ttl_seconds: 0
+  timeout: 300
+
+# ============ 检索参数 ============
+retrieval:
+  top_n: 5                   # 注入条数上限
+  min_score: 0.5             # 绝对阈值（cosine），低于视为不相关
+  cliff_ratio: 1.5           # 断崖检测：top1/top3 超过此比例则只取前 2-3 条
+  keyword_boost: 0.15        # 关键词命中加分
+  k_candidates: 30           # 候选数（top_n * 6）
+
+# ============ 语义去重 ============
+# sim_threshold 需与 embedding 模型匹配：
+#   bge-m3（区分度好）→ 0.95
+#   nomic-embed-text    → 0.88（中文区分度较弱，阈值需放宽）
+dedup:
+  enabled: true
+  sim_threshold: 0.95
+
+# ============ 稳定性（仅 lmstudio 生效）============
+stability:
+  healthcheck_interval: 60   # 守护线程巡检间隔（秒）
+  auto_load_retry: 3         # 加载失败重试次数
+  retry_backoff: 5           # 退避基数（秒），指数增长
+  keepalive_ttl: 0           # 保活 TTL；0 = 常驻
+
+# ============ 抽取节奏 ============
+extract_every_n_turns: 2     # 每 N 轮对话抽取一次（由前端扩展实现）

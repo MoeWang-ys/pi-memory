@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pi 记忆中心</title>
+<style>
+:root {
+  --bg: #0d1117; --panel: #161b22; --border: #21262d;
+  --text: #e6edf3; --dim: #8b949e;
+  --accent: #58a6ff; --green: #7ee787; --orange: #ffa657; --red: #f85149; --purple: #d2a8ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px;
+}
+h1 { font-size: 20px; margin-bottom: 4px; }
+.sub { color: var(--dim); font-size: 13px; margin-bottom: 20px; }
+.stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.stat {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 16px; min-width: 110px;
+}
+.stat .n { font-size: 22px; font-weight: 700; }
+.stat .k { font-size: 12px; color: var(--dim); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.card h2 { font-size: 14px; margin-bottom: 12px; color: var(--accent); }
+.card h2 .hint { font-weight: 400; font-size: 11px; color: var(--dim); margin-left: 8px; }
+.item {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; margin-bottom: 6px; font-size: 13px; display: flex; gap: 8px; align-items: flex-start;
+}
+.item .cat { flex-shrink: 0; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-top: 1px; }
+.cat.fact { background: #1f6feb44; color: var(--accent); }
+.cat.preference { background: #7ee78744; color: var(--green); }
+.cat.goal { background: #ffa65744; color: var(--orange); }
+.cat.decision { background: #f8514944; color: var(--red); }
+.cat.knowledge { background: #d2a8ff44; color: var(--purple); }
+.item .body { flex: 1; word-break: break-word; line-height: 1.5; }
+.item .meta { font-size: 11px; color: var(--dim); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+.item .score { color: var(--green); }
+.item .del { border: none; background: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 0 4px; }
+.item .del:hover { color: var(--red); }
+.row { display: flex; gap: 8px; margin-bottom: 10px; }
+input, textarea, select, button {
+  font-family: inherit; font-size: 13px; border-radius: 8px;
+}
+input, textarea, select {
+  background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 8px 10px; outline: none;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+input[type=text] { flex: 1; }
+textarea { width: 100%; resize: vertical; min-height: 80px; }
+button {
+  background: var(--accent); color: #0d1117; border: none; padding: 8px 14px;
+  cursor: pointer; font-weight: 600;
+}
+button:hover { filter: brightness(1.1); }
+button.ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); font-weight: 400; }
+.filter { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.chip { padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg); color: var(--dim); }
+.chip.on { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 600; }
+.log-item { font-size: 12px; color: var(--dim); border-bottom: 1px solid var(--border); padding: 6px 0; }
+.log-item b { color: var(--text); }
+.empty { color: var(--dim); font-size: 13px; padding: 12px 0; text-align: center; }
+.params label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); margin-right: 14px; }
+.params input { width: 90px; }
+.params { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+.toast-zone { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 99; }
+.toast { background: var(--panel); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-size: 13px; margin-top: 6px; }
+.dropzone {
+  border: 2px dashed var(--border); border-radius: 10px; padding: 16px;
+  text-align: center; color: var(--dim); transition: all .2s; cursor: pointer;
+}
+.dropzone.drag { border-color: var(--accent); background: #58a6ff11; }
+.dropzone .dz-hint { font-size: 13px; margin-bottom: 8px; }
+.file-queue { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.file-queue .fq-item {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.file-queue .fq-item.ok { border-color: #7ee78766; color: var(--green); }
+.file-queue .fq-item.err { border-color: #f8514966; color: var(--red); }
+.file-queue .fq-name { flex: 1; word-break: break-all; color: var(--text); }
+.file-queue .fq-remove { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 14px; padding: 0 4px; }
+.file-queue .fq-remove:hover { color: var(--red); }
+</style>
+</head>
+<body>
+<h1>pi 记忆中心</h1>
+<div class="sub">跨会话记忆 + 知识库 · 全局共享 · 向量检索</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="grid">
+  <!-- 记忆 -->
+  <div class="card">
+    <h2>跨会话记忆 <span class="hint">对话自动抽取，也可手动添加</span></h2>
+    <div class="row">
+      <select id="memCat">
+        <option value="fact">事实</option>
+        <option value="preference">偏好</option>
+        <option value="goal">目标</option>
+        <option value="decision">决定</option>
+      </select>
+      <input type="text" id="memContent" placeholder="手动添加一条记忆...">
+      <button onclick="addMemory()">添加</button>
+    </div>
+    <div class="filter" id="memFilter"></div>
+    <div id="memList"></div>
+  </div>
+
+  <!-- 知识库 -->
+  <div class="card">
+    <h2>知识库 <span class="hint">上传或粘贴文档 → 切块向量化 → agent 可检索引用</span></h2>
+    <div id="dropZone" class="dropzone">
+      <div class="dz-hint">拖拽 md/txt 文件到此处</div>
+      <button type="button" class="ghost" onclick="$('fileInput').click()">选择文件</button>
+      <input type="file" id="fileInput" accept=".md,.markdown,.txt" multiple hidden>
+      <div id="fileQueue" class="file-queue"></div>
+    </div>
+    <div style="margin:12px 0 8px;text-align:center;color:var(--dim);font-size:12px">— 或粘贴文本 —</div>
+    <div class="row">
+      <input type="text" id="kbTitle" placeholder="文档标题">
+    </div>
+    <textarea id="kbText" placeholder="粘贴文档内容（支持 md/txt），将自动切块入库..."></textarea>
+    <div style="margin-top:8px;display:flex;justify-content:flex-end">
+      <button onclick="importKB()">导入粘贴文本</button>
+    </div>
+    <div id="kbList" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:16px">
+  <!-- 注入日志 -->
+  <div class="card">
+    <h2>注入日志 <span class="hint">每次会话注入的记忆及分数</span></h2>
+    <div id="logList"></div>
+  </div>
+
+  <!-- 参数 -->
+  <div class="card">
+    <h2>检索参数 <span class="hint">调整后即时生效</span></h2>
+    <div class="params" id="params"></div>
+  </div>
+</div>
+
+<div class="toast-zone" id="toastZone"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const CATS = { fact: '事实', preference: '偏好', goal: '目标', decision: '决定', knowledge: '知识' };
+let state = { filter: 'all', memories: [], logs: [] };
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || '请求失败');
+  return d;
+}
+
+function toast(text) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = text;
+  $('toastZone').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+async function loadAll() {
+  await Promise.all([loadStatus(), loadMemories(), loadLogs(), loadParams(), loadKB()]);
+}
+
+/* 状态 */
+async function loadStatus() {
+  const d = await api('/api/status');
+  const s = d.stats;
+  $('stats').innerHTML = `
+    <div class="stat"><div class="n">${s.total}</div><div class="k">记忆总数</div></div>
+    <div class="stat"><div class="n">${s.by_source.knowledge || 0}</div><div class="k">知识库块</div></div>
+    <div class="stat"><div class="n">${d.embedding.model}</div><div class="k">embedding 模型</div></div>
+    <div class="stat"><div class="n">${d.embedding.dim}</div><div class="k">维度</div></div>
+    <div class="stat"><div class="n">${(s.by_source.conversation || 0) + (s.by_source.manual || 0)}</div><div class="k">对话记忆</div></div>`;
+}
+
+/* 记忆 */
+async function loadMemories() {
+  const d = await api('/api/memories?limit=300');
+  state.memories = d.memories;
+  renderMemories();
+  renderMemFilter();
+}
+function renderMemFilter() {
+  const cats = [['all', '全部'], ['conversation', '对话'], ['manual', '手动'], ...Object.entries(CATS)];
+  $('memFilter').innerHTML = cats.map(([k, v]) =>
+    `<span class="chip ${state.filter === k ? 'on' : ''}" onclick="setFilter('${k}')">${v}</span>`).join('');
+}
+function setFilter(k) { state.filter = k; renderMemories(); }
+function renderMemories() {
+  const list = state.memories.filter(m => state.filter === 'all' ? true : m.source === state.filter);
+  $('memList').innerHTML = list.length ? list.map(m => `
+    <div class="item">
+      <span class="cat ${m.category}">${CATS[m.category] || m.category}</span>
+      <div class="body">${esc(m.content)}
+        <div class="meta"><span>${m.source === 'knowledge' ? '知识库' : m.source === 'manual' ? '手动' : '对话'}</span>
+        ${m.project ? `<span>${esc(m.project)}</span>` : ''}</div>
+      </div>
+      <button class="del" onclick="delMemory('${m.id}')">×</button>
+    </div>`).join('') : '<div class="empty">暂无记忆。对话会自动抽取，或手动添加。</div>';
+}
+async function addMemory() {
+  const content = $('memContent').value.trim();
+  if (!content) return;
+  try {
+    await api('/api/memories', { method: 'POST', body: JSON.stringify({ content, category: $('memCat').value }) });
+    $('memContent').value = '';
+    toast('已添加并向量化');
+    loadAll();
+  } catch (e) { toast(e.message); }
+}
+async function delMemory(id) {
+  await api('/api/memories/' + id, { method: 'DELETE' });
+  loadAll();
+}
+
+/* 知识库 */
+async function importKB() {
+  const text = $('kbText').value.trim();
+  const title = $('kbTitle').value.trim();
+  if (!text) { toast('请粘贴文档内容'); return; }
+  try {
+    const d = await api('/api/knowledge', { method: 'POST', body: JSON.stringify({ text, title }) });
+    toast(`已导入 ${d.added} 块 / 共 ${d.chunks} 块`);
+    $('kbText').value = '';
+    loadAll();
+  } catch (e) { toast(e.message); }
+}
+
+/* 文件上传 */
+let fileQueue = [];  // {name, size, status: 'pending'|'ok'|'err', msg}
+function renderFileQueue() {
+  $('fileQueue').innerHTML = fileQueue.length ? fileQueue.map((f, i) => `
+    <div class="fq-item ${f.status === 'ok' ? 'ok' : f.status === 'err' ? 'err' : ''}">
+      <span class="fq-name">${esc(f.name)}</span>
+      <span>${f.status === 'ok' ? `✓ 导入 ${f.msg}` : f.status === 'err' ? `✕ ${f.msg}` : '上传中...'}</span>
+      <button class="fq-remove" onclick="fileQueue.splice(${i},1);renderFileQueue()">×</button>
+    </div>`).join('') : '';
+}
+async function uploadFiles(files) {
+  for (const file of files) {
+    if (!/\.(md|markdown|txt)$/i.test(file.name)) {
+      fileQueue.push({ name: file.name, status: 'err', msg: '仅支持 md/txt' });
+      renderFileQueue();
+      continue;
+    }
+    fileQueue.push({ name: file.name, status: 'pending' });
+    renderFileQueue();
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const r = await fetch('/api/knowledge/upload', { method: 'POST', body: fd });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || '上传失败');
+      const item = fileQueue[fileQueue.length - 1];
+      item.status = 'ok'; item.msg = `${d.added}/${d.chunks} 块`;
+    } catch (e) {
+      const item = fileQueue[fileQueue.length - 1];
+      item.status = 'err'; item.msg = e.message;
+    }
+    renderFileQueue();
+  }
+  if (files.length) loadAll();
+}
+function initDropzone() {
+  const dz = $('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag');
+    uploadFiles([...e.dataTransfer.files]);
+  });
+  $('fileInput').addEventListener('change', e => {
+    uploadFiles([...e.target.files]);
+    e.target.value = '';
+  });
+}
+async function loadKB() {
+  const d = await api('/api/knowledge');
+  $('kbList').innerHTML = (d.documents || []).length
+    ? d.documents.map(doc => `<div class="item"><div class="body"><b>${esc(doc.title)}</b><div class="meta">${doc.chunks} 块</div></div></div>`).join('')
+    : '<div class="empty">知识库为空。导入文档后 agent 可检索引用。</div>';
+}
+
+/* 注入日志 */
+async function loadLogs() {
+  const d = await api('/api/logs');
+  $('logList').innerHTML = (d.logs || []).length ? d.logs.map(l => `
+    <div class="log-item"><b>${l.time}</b> · 注入 ${l.count} 条 · 查询"${esc(l.query)}"
+      ${l.hits.map(h => `<span style="color:var(--green)">${h.score.toFixed(2)}</span> ${esc(h.content)}`).join(' · ')}
+    </div>`).join('') : '<div class="empty">暂无注入记录。</div>';
+}
+
+/* 参数 */
+async function loadParams() {
+  const d = await api('/api/status');
+  const r = d.retrieval;
+  $('params').innerHTML = `
+    <label>top_n <input type="number" id="p_top_n" value="${r.top_n}"></label>
+    <label>阈值 <input type="number" step="0.05" id="p_min_score" value="${r.min_score}"></label>
+    <label>断崖比 <input type="number" step="0.1" id="p_cliff" value="${r.cliff_ratio}"></label>
+    <button onclick="saveParams()">保存</button>`;
+}
+async function saveParams() {
+  const body = {
+    top_n: +$('p_top_n').value,
+    min_score: +$('p_min_score').value,
+    cliff_ratio: +$('p_cliff').value,
+  };
+  await api('/api/config', { method: 'POST', body: JSON.stringify(body) });
+  toast('参数已保存并生效');
+  loadAll();
+}
+
+function esc(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+$('memContent').addEventListener('keydown', e => { if (e.key === 'Enter') addMemory(); });
+initDropzone();
+loadAll();
+</script>
+</body>
+</html>
