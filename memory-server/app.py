@@ -13,6 +13,8 @@ import numpy as np
 
 from config import load_config
 import store
+import queue_db
+import extract_core
 from embedder import Embedder
 from extractor import Extractor
 from retrieval import Retriever
@@ -32,6 +34,12 @@ cfg = load_config()
 embedder = Embedder(cfg)
 extractor = Extractor(cfg)
 retriever = Retriever(cfg)
+
+# 抽取队列(落盘 SQLite)。默认 ON: 抽取改由独立 worker.py 进程消费,
+# HTTP 端点只入队不等待 → pi 永远不被模型推理堵住。
+# 兼容: extract.mode=sync 时退回旧行为(同步抽取, 会阻塞)。
+extract_mode = (cfg.get("extract", {}).get("mode") or "queue").lower()
+queue_db.init_db()
 
 # 启动 LM Studio 自愈守护线程(仅当后端是 lmstudio 时需要; 云端 provider 无此概念)
 _daemon = stability.start_daemon() if _uses_lmstudio(cfg) else None
@@ -88,62 +96,52 @@ async def index():
 
 @app.post("/api/extract")
 async def api_extract(data: dict):
-    """从对话消息抽取记忆并入库。
+    """把对话消息**入队**, 立即返回(毫秒级)。
 
-    去重采用双重策略(2026-09-27 加固):
+    ★ 关键改动 (2026-10-01): 这里以前是同步抽取, 模型推理几分钟 →
+      堵住 uvicorn 事件循环 → pi 连读记忆都要排队 → 卡死 pi。
+      实测: 空闲读 0.33s, 抽取进行中读 33.8s (慢 100 倍)。
+
+      现在只做一次 SQLite INSERT 就返回, 真正的抽取由 worker.py
+      独立进程消费队列完成 —— 推理多久都与 pi 无关。
+
+    去重策略(在 worker 里执行, 与同步模式共用 extract_core):
       1) 精确匹配: content 完全相同直接跳过
       2) 语义去重: 向量 cosine > DEDUP_SIM 视为同一条
-    (仅靠精确匹配不够: 模型两次生成同一事实时措辞会不同, 会重复入库)
     """
     messages = data.get("messages") or []
     if not messages:
         return JSONResponse({"error": "messages 不能为空"}, status_code=400)
     project = data.get("project", "")
     session_id = data.get("session_id", "")
+
+    # 兼容开关: extract.mode=sync 时退回旧行为(会阻塞, 仅调试用)
+    if extract_mode == "sync":
+        return await _extract_sync(messages, project, session_id)
+
     try:
-        items = extractor.extract(messages)
-        if not items:
-            return {"extracted": []}
-
-        texts = [it["content"] for it in items]
-        vecs = embedder.embed(texts)
-        existing = {m["content"] for m in store.list_memories(limit=5000)}
-
-        # 语义去重: 预加载库中已有向量(单次调用只加载一次)
-        dcfg = cfg.get("dedup", {})
-        DEDUP_SIM = float(dcfg.get("sim_threshold", 0.95))
-        DEDUP_ON = bool(dcfg.get("enabled", True))
-        try:
-            meta_all, mat_all = store.load_embeddings()
-        except Exception:
-            meta_all, mat_all = [], None
-
-        added, dup_skipped = [], 0
-        for it, v in zip(items, vecs):
-            content = it["content"]
-            if content in existing:
-                dup_skipped += 1
-                continue
-            # 向量相似度去重
-            if DEDUP_ON and mat_all is not None and len(meta_all) and v.size == mat_all.shape[1]:
-                sims = store.cosine_similarity(v, mat_all)
-                if sims.size and float(np.max(sims)) >= DEDUP_SIM:
-                    dup_skipped += 1
-                    continue
-            mem = store.add_memory(content, category=it.get("category", "fact"),
-                                   source="conversation", project=project,
-                                   session_id=session_id, embedding=v)
-            # 新入库的也加入待比对集合, 避免同一批次内自重复
-            existing.add(content)
-            if mat_all is not None:
-                mat_all = np.vstack([mat_all, v.reshape(1, -1)]) if mat_all.size else v.reshape(1, -1)
-                meta_all = meta_all + [{"id": mem["id"]}]
-            added.append({"id": mem["id"], "content": content, "category": mem["category"]})
-        if dup_skipped:
-            print(f"[extract] 去重跳过 {dup_skipped} 条")
-        return {"extracted": added}
+        tid = queue_db.enqueue(messages, session_id=session_id, project=project)
+        return {"queued": True, "job_id": tid, "extracted": [],
+                "note": "已入队, 由 worker.py 异步抽取"}
     except Exception as e:
-        # 抽取是后台任务, 失败只记日志, 绝不影响调用方
+        # 入队失败不影响 pi: 降级为丢弃, 只记日志
+        print(f"[extract] 入队失败: {type(e).__name__}: {e}")
+        return {"queued": False, "extracted": [], "error": f"{type(e).__name__}: {e}"}
+
+
+async def _extract_sync(messages: list, project: str, session_id: str):
+    """同步抽取(旧行为, 阻塞事件循环)。用线程池包裹, 至少不卡住其他请求。"""
+    import anyio
+    try:
+        result = await anyio.to_thread.run_sync(
+            lambda: extract_core.extract_and_store(
+                messages, project, session_id, extractor, embedder, cfg
+            )
+        )
+        if result.get("dup_skipped"):
+            print(f"[extract] 去重跳过 {result['dup_skipped']} 条")
+        return result
+    except Exception as e:
         print(f"[extract] 失败: {type(e).__name__}: {e}")
         return {"extracted": [], "error": f"{type(e).__name__}: {e}"}
 
@@ -317,11 +315,17 @@ async def api_health():
     else:
         emb_ok = ext_ok = True  # 云端 provider: 不探测加载状态
     daemon = stability.daemon_stats() if _uses_lmstudio(cfg) else {"running": False}
+    try:
+        q = queue_db.stats()
+    except Exception as e:
+        q = {"error": f"{type(e).__name__}: {e}"}
     return {"ok": emb_ok and ext_ok,
             "providers": {"embedding": embedder.provider_name,
                           "extract": extractor.provider_name},
             "embedding": {"model": embedder.model, "dim": embedder.dim, "loaded": emb_ok},
-            "extract": {"model": extractor.model, "loaded": ext_ok},
+            "extract": {"model": extractor.model, "loaded": ext_ok,
+                        "mode": extract_mode},
+            "queue": q,
             "daemon": daemon}
 
 

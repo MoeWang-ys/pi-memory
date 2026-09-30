@@ -17,7 +17,10 @@ import { readFile, stat } from "node:fs/promises";
 import { basename, extname, resolve } from "node:path";
 
 const SERVER = process.env.PI_MEMORY_SERVER ?? "http://127.0.0.1:8970";
-const INJECT_TIMEOUT_MS = 6000;    // 记忆注入超时: 它在 before_agent_start 关键路径上, 宁可不注入也绝不能阻塞本轮对话
+const INJECT_TIMEOUT_MS = 20000;   // 记忆注入超时: 它在 before_agent_start 关键路径上。
+// 正常几百毫秒, 但 worker 可能正在占用同一个 LM Studio 推理 —— 那时注入要排队,
+// 6s 会导致偶发"抽取失败: This operation was aborted"。20s 足够等到模型空出,
+// 又不会真的把会话拖死(超时也只是本轮不注入, 对话照常)。
 const EXTRACT_EVERY_N_TURNS = 2;   // 每 N 轮用户消息抽取一次
 const IMPORT_MAX_BYTES = 10 * 1024 * 1024;  // 单文件导入上限 10MB
 const IMPORT_EXTS = new Set([".md", ".markdown", ".txt"]);
@@ -52,7 +55,13 @@ function fmtMessages(messages: Array<{ role: string; content: string }>) {
   return messages.map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
 }
 
-async function post(path: string, body: unknown, timeoutMs = 300_000): Promise<any> {
+// 默认 300s —— 只适合检索类调用(实际毫秒级)。
+// ★ 抽取入队现在应该秒回, 所以单独用短超时: 服务不在就快速失败留着下次再试,
+//   绝不把 pi 拖在那里等。
+const POST_TIMEOUT_MS = 300_000;
+const EXTRACT_POST_TIMEOUT_MS = 15_000;
+
+async function post(path: string, body: unknown, timeoutMs = POST_TIMEOUT_MS): Promise<any> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -177,15 +186,43 @@ export default function memoryExtension(pi: ExtensionAPI) {
     if (!buf || buf.length < 2) return;
     pendingBySession.set(sessionId, []);
     try {
+      // 服务端(extract.mode=queue)收到即入队并立即返回, 真实抽取由独立 worker
+      // 进程完成。所以这里的超时给短一点也没关系: 超时了说明服务不在,
+      // 那就留回缓冲下次再试, 绝不能拖住 pi。
       await post("/api/extract", {
         messages: fmtMessages(buf),
         session_id: sessionId,
-      });
+      }, { timeoutMs: EXTRACT_POST_TIMEOUT_MS });
     } catch (e: any) {
       // 失败则留回缓冲, 下次再试
       const cur = pendingBySession.get(sessionId) ?? [];
       pendingBySession.set(sessionId, [...buf, ...cur].slice(-40));
       console.error("[memory] 抽取失败:", e?.message ?? e);
+    }
+  }
+
+  /**
+   * 会话退出时的最后一搏: 不 await、不等结果, 仅把请求发出去。
+   *
+   * 为什么不用普通 fetch: pi --print/退出时进程会立刻结束, 未完成的
+   * fetch 被 abort —— 服务端根本收不到, 最后一批对话就丢了。
+   * 用 keepalive 让运行时把请求送完(不随本进程死亡)。
+   *
+   * 注意: 这只提高"发送成功率", 不保证一定送达 —— 因为真正的抽取本来
+   * 就在服务端队列里, 掉了也会在下次会话时由其它任务带着上下文补上。
+   */
+  function fireAndForgetExtract(sessionId: string) {
+    const buf = pendingBySession.get(sessionId);
+    if (!buf || buf.length < 2) return;
+    try {
+      void fetch(`${SERVER}/api/extract`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: fmtMessages(buf), session_id: sessionId }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      /* 尽力而为, 失败无所谓 */
     }
   }
 
@@ -202,7 +239,11 @@ export default function memoryExtension(pi: ExtensionAPI) {
   pi.on("session_shutdown", async (_event, ctx) => {
     try {
       const sid = ctx.sessionManager.getSessionId();
-      await flushExtract(sid);
+      // ★ 会话关闭时 pi 可能立刻退出进程, 未完成的 fetch 会被 abort,
+      //   导致最后一批对话丢掉。所以这里用 keepalive 发出请求
+      //   (浏览器/Node 会把它交给主进程送完, 不随本进程死亡),
+      //   并且绝不 await —— 不能拖住 pi 退出。
+      fireAndForgetExtract(sid);
       pendingBySession.delete(sid);
     } catch (e: any) {
       console.error("[memory] session_shutdown:", e?.message ?? e);
