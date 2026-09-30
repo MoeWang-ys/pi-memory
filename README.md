@@ -2,75 +2,54 @@
 
 [English](README.md) · [中文](README.zh-CN.md)
 
-<img src="docs/assets/hero-en.svg" alt="Memory Center — cross-session long-term memory for your AI assistant" width="100%" />
-
-> Give your AI assistant a **cross-session memory** — the preferences you stated, the decisions you made, the pitfalls you hit. Next time, it remembers.
+<img src="docs/assets/hero-en.svg" alt="Before vs after: your AI stops forgetting you" width="100%" />
 
 ---
 
-## The problem
+## Have you felt this?
 
-Every new session, your AI starts from zero:
+Last week you told it: *"answer me in Chinese from now on."* It complied.
+Today you open a new session and ask it to write a README — **it replies in English.**
 
-- You said "answer me in Chinese" — next session it's back to English
-- You spent half an hour explaining your business context — new window, explain it again
-- You settled a technical decision last week — this week it proposes the opposite
-- Your hard-won lessons are scattered across dozens of conversations, unfindable
+You say it again. It agrees again.
+Next week, the exact same thing happens again.
 
-**The root cause**: an LLM's context is volatile. The conversation ends, it's wiped. You don't re-introduce yourself to a colleague every morning — but your AI meets a stranger every time.
+You spent half an hour explaining your business context last week. New window this week — it's blank.
+You settled on a technical approach last month. This month it proposes the opposite.
 
-## What you get
+**It's not you forgetting. It's that it has no memory.**
+The moment a conversation ends, it's wiped. You don't re-introduce yourself to a colleague every morning — but your AI meets you like a stranger, every time.
 
-<img src="docs/assets/flow-en.svg" alt="How memories are written and read" width="100%" />
+---
 
-| | |
-|---|---|
-| **Automatic** | Nothing to remember by hand. Every turn, the memory is extracted in the background |
-| **Semantic** | Not keyword matching. "how do I make it faster" finds the "performance tuning" memory |
-| **Categorized** | `fact` / `preference` / `goal` / `decision` / `knowledge` |
-| **Local-first** | On the local path, not a single character leaves your machine |
-| **Deduplicated** | Semantic dedup (cos ≥ 0.95) — the same fact never gets stored eight times |
-| **Self-healing** | Model gets unloaded, it reloads it. Service crashes, it restarts |
+## After you install it
 
-**Measured on the author's instance**: 387 memories, all 1024-dim, top retrieval similarity steady at 0.64–0.80.
+Left is today, right is after — **the same sentence, two different experiences.**
 
-## How it works
+- Say it once, it's remembered — **you do nothing**
+- Three days later it recalls it on its own, not one word repeated
+- Not keyword matching: you ask *"how do I stop it crashing"*, it surfaces the *"service stability hardening"* memory you saved
+- Zero friction: it runs quietly in the background and never interrupts your conversation
 
-**Write**: after each turn, the conversation goes to an extraction model — "anything here worth remembering later?" → becomes a vector, gets stored.
-**Read**: on a new session, your current task becomes a vector too → the **nearest** few are found → those are the semantically relevant memories.
+---
 
-```mermaid
-flowchart LR
-    C["Your conversation"]
-    subgraph W["Write (automatic, background)"]
-        direction TB
-        E1["Extract<br/>find what's worth keeping"]
-        E2["Embed<br/>text → 1024-dim vector"]
-        E3["Dedup + store<br/>cos ≥ 0.95 = duplicate"]
-        E1 --> E2 --> E3
-    end
-    subgraph R["Read (on a new session)"]
-        direction TB
-        R1["Retrieve<br/>use the current task as query"]
-        R2["Rank + filter<br/>drop low scores, cut at the cliff"]
-        R1 --> R2
-    end
-    DB["SQLite memory store"]
-    C -->|write| E1
-    E3 --> DB
-    DB --> R1
-    R2 -->|inject relevant memories| C
-```
+## What actually gets smoother
 
-**Why vectors and not keywords?** You ask "how do I stop it crashing" while the memory says "service stability hardening" — not one word matches, but they mean the same thing. Vectors catch that.
+| | Before | After |
+|---|---|---|
+| **Preferences** | Every new session, say "in Chinese" / "be concise" / "give me code" again | Said once, remembered forever |
+| **Context** | You explain your background for half an hour; a new window resets it | It retrieves it itself — you never explain twice |
+| **Decisions** | You settled it last week; this week it flips | It remembers *why* you decided, so it stops flip-flopping |
+| **Lessons** | Pitfalls you hit are scattered across dozens of sessions, unfindable | They resurface when relevant — like notes you always carry |
+| **Search** | If Ctrl+F can't find it, it's gone | Similar *meaning* is enough — not one word needs to match |
+| **Upkeep** | You have to remember to save things and tag them | Fully automatic, you're not involved |
 
-### Architecture
+**This is not chat-log search.** A chat log is dead — you need to know the keyword and roughly when it happened to dig it out.
+Memory is alive: at the moment you speak, the relevant entries are pulled into context automatically. **You won't even notice it working.**
 
-<img src="docs/assets/architecture-en.svg" alt="Memory Center architecture: frontends, engine, pluggable inference backends" width="100%" />
+---
 
-**The key design: the inference backend is pluggable.** Local LM Studio and cloud APIs sit behind the same abstraction layer — one line of config switches between them.
-
-## Getting started
+## How fast is setup
 
 ```bash
 git clone https://github.com/MoeWang-ys/pi-web-extensions.git
@@ -79,6 +58,8 @@ cd pi-web-extensions/memory-server
 ```
 
 `install.sh` finds Python, creates a virtualenv, installs dependencies, then runs an **interactive wizard**: it probes what's on your machine (LM Studio / Ollama / cloud), lists the available models for you to pick, measures the real embedding dimension, verifies connectivity, and writes the config.
+
+Then `nohup ./run.sh &` and it lives in the background.
 
 ### Two paths, pick one
 
@@ -89,23 +70,17 @@ cd pi-web-extensions/memory-server
 | Hardware | ~8GB RAM for models | None |
 | Best for | Macs, privacy-minded | Running in 5 minutes |
 
-**A**: Install [LM Studio](https://lmstudio.ai) → start its server (`127.0.0.1:1234`) → download two models → run `./install.sh`
+**A**: Install [LM Studio](https://lmstudio.ai) → start its server → download two models → `./install.sh`
+**B**: `./install.sh` → choose "cloud" in the wizard → pick a provider → paste your key
 
-**B**: Run `./install.sh` → choose "cloud" in the wizard → pick a provider → paste your key
-
-Or skip the key in the file entirely and use environment variables (recommended, keeps secrets out of config):
+Or skip the key in the file entirely and use environment variables (recommended — keeps secrets out of config):
 
 ```bash
 export MEMORY_EMBEDDING_API_KEY="sk-xxx"
 export MEMORY_EXTRACT_API_KEY="sk-xxx"
 ```
 
-### Start it
-
-```bash
-nohup ./run.sh &                                    # run persistently
-curl -s http://127.0.0.1:8970/api/health            # look for "ok": true
-```
+---
 
 ## Choosing models (the only part that needs thought)
 
@@ -113,11 +88,11 @@ The wizard asks you twice. These two models are chosen in **completely different
 
 ### Embedding model — decides whether search works at all
 
-| Model | Dim | Chinese | Notes |
-|---|---|---|---|
-| **`bge-m3`** | 1024 | ⭐⭐⭐⭐⭐ | **Best for Chinese**. One of the strongest open multilingual embedding models |
-| `nomic-embed-text` | 768 | ⭐⭐ | Lightweight, but **poor Chinese discrimination** — Chinese sentences all collapse into 0.99 similarity, and retrieval effectively fails |
-| `text-embedding-3-small` | 1536 | ⭐⭐⭐⭐ | OpenAI, good quality, paid |
+| Model | Chinese | Notes |
+|---|---|---|
+| **`bge-m3`** (1024-dim) | ⭐⭐⭐⭐⭐ | **Best for Chinese**. One of the strongest open multilingual embedding models |
+| `nomic-embed-text` (768-dim) | ⭐⭐ | Lightweight, but **poor Chinese discrimination** — Chinese sentences all collapse into 0.99 similarity and retrieval effectively fails |
+| `text-embedding-3-small` | ⭐⭐⭐⭐ | OpenAI, good quality, paid |
 
 > ⚠️ **Don't use an English-oriented model for Chinese.** This is the single most common failure.
 
@@ -141,6 +116,8 @@ Change the model and **all existing memories become invalid** (old and new vecto
 
 The service checks for dimension mismatches on startup and warns you. The dedup threshold must also be recalibrated: `bge-m3` → `0.95`, `nomic` → `0.88`.
 
+---
+
 ## Connecting to your tools
 
 Once the engine is running, pick a frontend:
@@ -163,6 +140,23 @@ cd pi-memory && pi-plugin pack .     # → dist/local.pi-memory-<ver>.piplug
 Install that file in PI-Desktop. Supports `recall` / `search` / `remember` / `extract` / `list` / `forget` / `status`.
 </details>
 
+---
+
+## How it works
+
+<img src="docs/assets/flow-en.svg" alt="How memories are written and read" width="100%" />
+
+**Write**: after each turn, the conversation goes to an extraction model — "anything here worth remembering later?" → becomes a vector, gets stored.
+**Read**: on a new session, your current task becomes a vector too → the **nearest** few are found → those are the semantically relevant memories.
+
+**Why vectors and not keywords?** You ask "how do I stop it crashing" while the memory says "service stability hardening" — not one word matches, but they mean the same thing. Vectors catch that.
+
+<img src="docs/assets/architecture-en.svg" alt="Memory Center architecture: frontends, engine, pluggable inference backends" width="100%" />
+
+**The key design: the inference backend is pluggable.** Local LM Studio and cloud APIs sit behind the same abstraction layer — one line of config switches between them.
+
+---
+
 ## Layout
 
 ```
@@ -181,6 +175,8 @@ pi-memory/           PI-Desktop frontend
 tts-server/          text-to-speech (standalone)
 wal-extension/       other extensions (standalone)
 ```
+
+---
 
 ## FAQ
 
@@ -222,6 +218,8 @@ Past incident: `ttl_seconds: 3600` and LM Studio's global `jitModelTTL` (1 hour)
 `max_tokens` is too small. Reasoning models need `3000`+ or the JSON gets truncated.
 </details>
 
+---
+
 ## Maintenance
 
 ```bash
@@ -231,6 +229,8 @@ nohup ./run.sh &            # background, persistent
 .venv/bin/python backfill.py --min-chars 150 --chunk 12   # process conversation history
 ./install.sh                # reconfigure (backs up the old config)
 ```
+
+---
 
 ## Design notes
 

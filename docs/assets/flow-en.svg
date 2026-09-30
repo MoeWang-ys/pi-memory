@@ -1,132 +1,126 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560" role="img" aria-label="记忆的写入与读取流程">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img" aria-label="记忆的工作原理：说一次，以后都记得">
   <defs>
-    <linearGradient id="paper3" x1="0" y1="0" x2="0.3" y2="1">
+    <linearGradient id="bg3" x1="0" y1="0" x2="0.3" y2="1">
       <stop offset="0%" stop-color="#FBF8F2"/><stop offset="100%" stop-color="#F2EBDE"/>
     </linearGradient>
-    <linearGradient id="terraW" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="terra3" x1="0" y1="0" x2="1" y2="0.7">
       <stop offset="0%" stop-color="#C04A1A"/><stop offset="100%" stop-color="#DC8250"/>
     </linearGradient>
-    <linearGradient id="tealR" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="teal3" x1="0" y1="0" x2="1" y2="0.7">
       <stop offset="0%" stop-color="#1F4E4A"/><stop offset="100%" stop-color="#35857A"/>
     </linearGradient>
-    <marker id="aT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M0 0 L10 5 L0 10 z" fill="#C04A1A"/>
-    </marker>
-    <marker id="aG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M0 0 L10 5 L0 10 z" fill="#1F4E4A"/>
+    <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#C08A6A"/>
     </marker>
     <filter id="sh3" x="-25%" y="-25%" width="150%" height="165%">
-      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#5A4632" flood-opacity="0.12"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#5A4632" flood-opacity="0.11"/>
     </filter>
-    <pattern id="grid3" width="30" height="30" patternUnits="userSpaceOnUse">
-      <path d="M30 0H0V30" fill="none" stroke="#5A4632" stroke-width="0.6" opacity="0.05"/>
+    <pattern id="gr3" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#5A4632" stroke-width="0.6" opacity="0.05"/>
     </pattern>
   </defs>
 
-  <rect width="1200" height="560" fill="url(#paper3)"/>
-  <rect width="1200" height="560" fill="url(#grid3)"/>
+  <rect width="1200" height="480" fill="url(#bg3)"/>
+  <rect width="1200" height="480" fill="url(#gr3)"/>
 
-  <!-- 标题 -->
-  <text x="600" y="46" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-        font-size="25" font-weight="800" fill="#2B2118">How a memory flows</text>
-  <text x="600" y="72" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-        font-size="14" fill="#8A7A66">Written once, then found again by semantic search</text>
+  <text x="600" y="52" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="26" font-weight="800" fill="#2B2118">Say it once. It remembers.</text>
+  <text x="600" y="80" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="14.5" fill="#8A7A66">Just chat normally. What gets remembered, and when it comes back, is its problem</text>
 
-  <!-- ==================== 写入链路（上） ==================== -->
-  <g transform="translate(0,104)">
-    <g transform="translate(48,0)">
-      <rect x="0" y="0" width="92" height="30" rx="15" fill="url(#terraW)" opacity="0.14"/>
-      <text x="46" y="20" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC',sans-serif"
-            font-size="13" font-weight="800" fill="#8E3E1C">WRITE</text>
-    </g>
-    <text x="156" y="20" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-          font-size="13" fill="#A08C74">Runs in the background every turn — you do nothing</text>
-
-    <!-- 三个步骤 -->
-    <g font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif" filter="url(#sh3)">
-      <rect x="60" y="42" width="300" height="106" rx="15" fill="#FFFFFF" stroke="#C04A1A" stroke-opacity="0.22"/>
-      <text x="82" y="72" font-size="15.5" font-weight="700" fill="#8E3E1C">Extract</text>
-      <text x="82" y="98" font-size="12.8" fill="#6B5A47">Send the turn to a model:</text>
-      <text x="82" y="118" font-size="12.8" fill="#6B5A47">"Anything worth keeping?"</text>
-      <text x="82" y="138" font-size="11.5" fill="#9A8A76">Returns structured items + category</text>
-
-      <rect x="450" y="42" width="300" height="106" rx="15" fill="#FFFFFF" stroke="#C04A1A" stroke-opacity="0.22"/>
-      <text x="472" y="72" font-size="15.5" font-weight="700" fill="#8E3E1C">Embed</text>
-      <text x="472" y="98" font-size="12.8" fill="#6B5A47">Text becomes 1024 numbers</text>
-      <text x="472" y="118" font-size="12.8" fill="#6B5A47">= one coordinate in semantic space</text>
-      <text x="472" y="138" font-size="11.5" fill="#9A8A76">Similar meaning → nearby coordinates</text>
-
-      <rect x="840" y="42" width="300" height="106" rx="15" fill="#FFFFFF" stroke="#C04A1A" stroke-opacity="0.22"/>
-      <text x="862" y="72" font-size="15.5" font-weight="700" fill="#8E3E1C">Dedup + store</text>
-      <text x="862" y="98" font-size="12.8" fill="#6B5A47">cos ≥ 0.95 counts as duplicate</text>
-      <text x="862" y="118" font-size="12.8" fill="#6B5A47">The same fact is never stored twice</text>
-      <text x="862" y="138" font-size="11.5" fill="#9A8A76">Lands in SQLite</text>
+  <!-- ============ 上：写 ============ -->
+  <g transform="translate(0,108)">
+    <g transform="translate(46,0)">
+      <rect x="0" y="0" width="150" height="30" rx="15" fill="url(#terra3)" opacity="0.14"/>
+      <text x="75" y="20" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" font-weight="800" fill="#8E3E1C">WHEN YOU TALK</text>
     </g>
 
-    <!-- 箭头 -->
-    <g stroke="#C04A1A" stroke-width="2" opacity="0.6" marker-end="url(#aT)">
-      <path d="M364 95 H 444"/>
-      <path d="M754 95 H 834"/>
-    </g>
-  </g>
-
-  <!-- ==================== 中间：数据库 ==================== -->
-  <g transform="translate(0,290)">
     <g filter="url(#sh3)">
-      <rect x="440" y="0" width="320" height="70" rx="16" fill="#2B2118" opacity="0.06" stroke="#5A4632" stroke-opacity="0.25"/>
-      <ellipse cx="470" cy="35" rx="13" ry="22" fill="#8A6A4E" opacity="0.35"/>
-      <ellipse cx="470" cy="35" rx="26" ry="22" fill="#9A7A5E" opacity="0.30"/>
-      <text x="520" y="30" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="15.5" font-weight="700" fill="#2B2118">SQLite vector store</text>
-      <text x="520" y="52" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="12.5" fill="#8A7A66">387 memories · all on your own machine</text>
+      <rect x="46" y="42" width="330" height="86" rx="16" fill="#FFFFFF" stroke="#C04A1A" stroke-opacity="0.2"/>
+      <text x="70" y="74" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="15.5" font-weight="700" fill="#2B2118">"Answer me in Chinese from now on"</text>
+      <text x="70" y="100" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#8A7A66">You say it in passing and keep talking</text>
+      <text x="70" y="119" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12" fill="#B08A6A">No tagging, no save button</text>
+    </g>
+
+    <path d="M386 85 H 442" stroke="#C08A6A" stroke-width="2" marker-end="url(#a3)" opacity="0.8"/>
+
+    <g filter="url(#sh3)">
+      <rect x="452" y="42" width="330" height="86" rx="16" fill="#FFFFFF" stroke="#C04A1A" stroke-opacity="0.2"/>
+      <text x="476" y="74" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="15.5" font-weight="700" fill="#2B2118">It quietly picks out what matters</text>
+      <text x="476" y="100" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#8A7A66">Small talk gets dropped; preferences and decisions stay</text>
+      <text x="476" y="119" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12" fill="#B08A6A">All in the background, never interrupts</text>
+    </g>
+
+    <path d="M792 85 H 848" stroke="#C08A6A" stroke-width="2" marker-end="url(#a3)" opacity="0.8"/>
+
+    <g filter="url(#sh3)">
+      <rect x="858" y="42" width="296" height="86" rx="16" fill="#FFFFFF" stroke="#C04A1A" stroke-opacity="0.2"/>
+      <text x="882" y="74" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="15.5" font-weight="700" fill="#2B2118">Stored as one memory</text>
+      <text x="882" y="100" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#8A7A66">Similar things are never stored twice</text>
+      <text x="882" y="119" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12" fill="#B08A6A">Lives on your own machine</text>
     </g>
   </g>
 
-  <!-- 下行箭头（写：从上到下） -->
-  <path d="M930 252 V 300 H 770" stroke="#C04A1A" stroke-width="2" fill="none" marker-end="url(#aT)" opacity="0.55"/>
-  <!-- 上行箭头（读：从下到上） -->
-  <path d="M430 300 V 252 H 270" stroke="#1F4E4A" stroke-width="2" fill="none" marker-end="url(#aG)" opacity="0.55"/>
-
-  <!-- ==================== 读取链路（下） ==================== -->
-  <g transform="translate(0,384)">
-    <g transform="translate(48,0)">
-      <rect x="0" y="0" width="92" height="30" rx="15" fill="url(#tealR)" opacity="0.14"/>
-      <text x="46" y="20" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC',sans-serif"
-            font-size="13" font-weight="800" fill="#1F4E4A">READ</text>
-    </g>
-    <text x="156" y="20" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-          font-size="13" fill="#A08C74">The moment you speak, relevant memories are injected</text>
-
-    <g font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif" filter="url(#sh3)">
-      <rect x="60" y="42" width="300" height="106" rx="15" fill="#FFFFFF" stroke="#1F4E4A" stroke-opacity="0.24"/>
-      <text x="82" y="72" font-size="15.5" font-weight="700" fill="#1F4E4A">Retrieve</text>
-      <text x="82" y="98" font-size="12.8" fill="#6B5A47">Your current question becomes the query</text>
-      <text x="82" y="118" font-size="12.8" fill="#6B5A47">Embedded the same way</text>
-      <text x="82" y="138" font-size="11.5" fill="#9A8A76">Find the nearest coordinates</text>
-
-      <rect x="450" y="42" width="300" height="106" rx="15" fill="#FFFFFF" stroke="#1F4E4A" stroke-opacity="0.24"/>
-      <text x="472" y="72" font-size="15.5" font-weight="700" fill="#1F4E4A">Rank + filter</text>
-      <text x="472" y="98" font-size="12.8" fill="#6B5A47">Drop anything under the threshold</text>
-      <text x="472" y="118" font-size="12.8" fill="#6B5A47">Cut at the similarity cliff</text>
-      <text x="472" y="138" font-size="11.5" fill="#9A8A76">Better to give less than to inject noise</text>
-
-      <rect x="840" y="42" width="300" height="106" rx="15" fill="#FFFFFF" stroke="#1F4E4A" stroke-opacity="0.24"/>
-      <text x="862" y="72" font-size="15.5" font-weight="700" fill="#1F4E4A">Inject</text>
-      <text x="862" y="98" font-size="12.8" fill="#6B5A47">Stitch the matching memories</text>
-      <text x="862" y="118" font-size="12.8" fill="#6B5A47">into this turn's context</text>
-      <text x="862" y="138" font-size="11.5" fill="#9A8A76">And the AI "remembers"</text>
-    </g>
-
-    <g stroke="#1F4E4A" stroke-width="2" opacity="0.6" marker-end="url(#aG)">
-      <path d="M364 95 H 444"/>
-      <path d="M754 95 H 834"/>
+  <!-- 中间：记忆卡片 -->
+  <g transform="translate(0,268)">
+    <g filter="url(#sh3)">
+      <rect x="300" y="0" width="600" height="78" rx="17" fill="#FFFFFF" stroke="#E0D5C4"/>
+      <rect x="300" y="0" width="5" height="78" rx="2.5" fill="url(#terra3)"/>
+      <text x="330" y="30" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12" font-weight="800" fill="#8E3E1C" letter-spacing="1">PREFERENCE</text>
+      <text x="330" y="54" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="15.5" fill="#3E3226">User prefers replies in Chinese</text>
+      <text x="330" y="72" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="11.5" fill="#A89880">+ all your preferences, context, decisions and lessons — a few hundred in total</text>
+      <circle cx="860" cy="39" r="22" fill="url(#teal3)" opacity="0.12"/>
+      <text x="860" y="44" text-anchor="middle" font-size="18" fill="#1F4E4A">🔒</text>
     </g>
   </g>
 
-  <!-- 底部注解 -->
-  <text x="600" y="546" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-        font-size="12.5" fill="#A08C74">
-    You ask "how do I stop it crashing"; the memory says "service stability hardening". Same meaning, no shared words — vectors catch that.
-  </text>
+  <!-- ============ 下：读 ============ -->
+  <g transform="translate(0,376)">
+    <g transform="translate(46,0)">
+      <rect x="0" y="0" width="176" height="30" rx="15" fill="url(#teal3)" opacity="0.15"/>
+      <text x="88" y="20" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" font-weight="800" fill="#1F4E4A">NEW SESSION · YOU SPEAK</text>
+    </g>
+
+    <g filter="url(#sh3)">
+      <rect x="46" y="42" width="330" height="60" rx="15" fill="#FFFFFF" stroke="#1F4E4A" stroke-opacity="0.22"/>
+      <text x="70" y="68" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14.5" fill="#3E3226">"Write me a README"</text>
+      <text x="70" y="89" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12" fill="#A89880">You never mention Chinese</text>
+    </g>
+
+    <path d="M386 72 H 442" stroke="#7FA8A0" stroke-width="2" marker-end="url(#a3)" opacity="0.85"/>
+
+    <g filter="url(#sh3)">
+      <rect x="452" y="42" width="330" height="60" rx="15" fill="#FFFFFF" stroke="#1F4E4A" stroke-opacity="0.22"/>
+      <text x="476" y="68" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14.5" font-weight="700" fill="#1F4E4A">It recalls the relevant ones itself</text>
+      <text x="476" y="89" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12" fill="#A89880">Matches by meaning, not by keyword</text>
+    </g>
+
+    <path d="M792 72 H 848" stroke="#7FA8A0" stroke-width="2" marker-end="url(#a3)" opacity="0.85"/>
+
+    <g filter="url(#sh3)">
+      <rect x="858" y="42" width="296" height="60" rx="15" fill="#1F4E4A" opacity="0.10" stroke="#1F4E4A" stroke-opacity="0.26"/>
+      <text x="882" y="68" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14.5" font-weight="700" fill="#1F4E4A">Writes it in Chinese</text>
+      <text x="882" y="89" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12" fill="#5A7A74">Not one word repeated</text>
+    </g>
+  </g>
 </svg>

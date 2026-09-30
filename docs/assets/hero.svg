@@ -1,147 +1,148 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img" aria-label="pi 记忆中心 —— 给 AI 一个跨会话的长期记忆">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" width="1200" height="620" role="img" aria-label="使用前 vs 使用后：AI 从每次失忆变成记得你">
   <defs>
-    <!-- 暖砂底，避开 GitHub-dark + 紫渐变的偷懒解 -->
-    <linearGradient id="paper" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0%"   stop-color="#FBF7F0"/>
-      <stop offset="55%"  stop-color="#F5EFE4"/>
-      <stop offset="100%" stop-color="#EFE7D9"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#FBF8F2"/><stop offset="100%" stop-color="#F2EBDE"/>
     </linearGradient>
-
-    <!-- 赤陶橙（主色） -->
-    <linearGradient id="terra" x1="0" y1="0" x2="1" y2="0.6">
-      <stop offset="0%"   stop-color="#C04A1A"/>
-      <stop offset="100%" stop-color="#D97038"/>
+    <linearGradient id="warmG" x1="0" y1="0" x2="1" y2="0.8">
+      <stop offset="0%" stop-color="#C04A1A"/><stop offset="100%" stop-color="#DC8250"/>
     </linearGradient>
-
-    <!-- 墨青（辅色） -->
-    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="0.6">
-      <stop offset="0%"   stop-color="#1F4E4A"/>
-      <stop offset="100%" stop-color="#2E7A72"/>
+    <linearGradient id="tealG" x1="0" y1="0" x2="1" y2="0.8">
+      <stop offset="0%" stop-color="#1F4E4A"/><stop offset="100%" stop-color="#35857A"/>
     </linearGradient>
-
-    <!-- 卡片投影 -->
-    <filter id="lift" x="-30%" y="-30%" width="160%" height="180%">
-      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#5A4632" flood-opacity="0.13"/>
+    <filter id="card" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#5A4632" flood-opacity="0.10"/>
     </filter>
-    <filter id="soft" x="-40%" y="-40%" width="180%" height="200%">
-      <feGaussianBlur stdDeviation="26"/>
-    </filter>
-
-    <!-- 网格纹理（极淡，克制） -->
-    <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse">
-      <path d="M34 0H0V34" fill="none" stroke="#5A4632" stroke-width="0.6" opacity="0.055"/>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#5A4632" stroke-width="0.6" opacity="0.05"/>
     </pattern>
   </defs>
 
-  <!-- 底 -->
-  <rect width="1200" height="480" fill="url(#paper)"/>
-  <rect width="1200" height="480" fill="url(#grid)"/>
+  <rect width="1200" height="620" fill="url(#bg)"/>
+  <rect width="1200" height="620" fill="url(#grid)"/>
 
-  <!-- 右侧暖光晕（不刺眼，低饱和） -->
-  <ellipse cx="1010" cy="120" rx="330" ry="230" fill="#E8A87C" opacity="0.30" filter="url(#soft)"/>
-  <ellipse cx="180"  cy="430" rx="300" ry="200" fill="#2E7A72" opacity="0.13" filter="url(#soft)"/>
+  <!-- 标题区 -->
+  <text x="600" y="62" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="34" font-weight="800" fill="#2B2118">同一句话，两种体验</text>
+  <text x="600" y="94" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="15.5" fill="#8A7A66">你说过的话，它到底记不记得</text>
 
-  <!-- ================= 左侧：文案 ================= -->
+  <!-- ============ 左：BEFORE ============ -->
+  <g transform="translate(52,128)">
+    <rect x="0" y="0" width="524" height="440" rx="20" fill="#FFFFFF" opacity="0.55" stroke="#B9A992" stroke-opacity="0.5" stroke-dasharray="7 5"/>
+    <g transform="translate(26,26)">
+      <rect x="0" y="0" width="112" height="32" rx="16" fill="#8A7A66" opacity="0.16"/>
+      <text x="56" y="21" text-anchor="middle" font-family="ui-sans-serif,-apple-system,sans-serif"
+            font-size="13.5" font-weight="800" fill="#7A6B58" letter-spacing="1.4">BEFORE</text>
+    </g>
+    <text x="26" y="90" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+          font-size="19" font-weight="800" fill="#4A3B2C">每次开新会话，它都是新来的</text>
 
-  <!-- 顶部小标签 -->
-  <g transform="translate(80,74)">
-    <rect x="0" y="0" width="176" height="32" rx="16" fill="#FFFFFF" opacity="0.75" stroke="#C04A1A" stroke-opacity="0.28"/>
-    <circle cx="18" cy="16" r="4.5" fill="url(#terra)"/>
-    <text x="34" y="21" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-          font-size="14" font-weight="600" fill="#8E3E1C" letter-spacing="0.6">跨会话长期记忆</text>
+    <!-- 对话 1 -->
+    <g transform="translate(26,116)">
+      <rect x="0" y="0" width="470" height="74" rx="13" fill="#F4F1EA"/>
+      <circle cx="26" cy="24" r="14" fill="#B9A992" opacity="0.42"/>
+      <text x="26" y="29" text-anchor="middle" font-size="12" font-family="ui-sans-serif,sans-serif"
+            font-weight="700" fill="#FFFFFF">你</text>
+      <text x="50" y="29" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14.5" fill="#3E3226">以后回答我，都用中文。</text>
+      <text x="50" y="54" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#9A8A76">（它照做了）</text>
+    </g>
+
+    <!-- 分隔：会话结束 -->
+    <g transform="translate(26,206)">
+      <path d="M0 0 H 470" stroke="#B9A992" stroke-width="1.2" stroke-dasharray="5 5" opacity="0.75"/>
+      <circle cx="235" cy="0" r="16" fill="#FBF8F2"/>
+      <text x="235" y="5" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC',sans-serif"
+            font-size="11.5" font-weight="700" fill="#A89880">会话结束</text>
+    </g>
+
+    <!-- 对话 2 -->
+    <g transform="translate(26,238)">
+      <rect x="0" y="0" width="470" height="98" rx="13" fill="#F4F1EA"/>
+      <circle cx="26" cy="24" r="14" fill="#B9A992" opacity="0.42"/>
+      <text x="26" y="29" text-anchor="middle" font-size="12" font-family="ui-sans-serif,sans-serif"
+            font-weight="700" fill="#FFFFFF">你</text>
+      <text x="50" y="29" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14.5" fill="#3E3226">帮我写个 README。</text>
+      <text x="50" y="58" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13" fill="#9A8A76">（它用英文回你了……又忘了）</text>
+      <text x="50" y="82" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12.5" fill="#B08A6A">← 你只能再说一遍</text>
+    </g>
+
+    <!-- 底部小结 -->
+    <text x="26" y="382" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+          font-size="13.5" fill="#8A7A66">重复说过的话 · 重复讲过的背景 · 重复纠正的偏好</text>
   </g>
 
-  <!-- 主标题 -->
-  <text x="80" y="196" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-        font-size="72" font-weight="800" fill="#2B2118" letter-spacing="-1.5">
-    记忆中心
-  </text>
-
-  <!-- 标题下的手绘感下划线 -->
-  <path d="M82 216 q 92 12 186 2 t 148 -4" fill="none" stroke="url(#terra)" stroke-width="6"
-        stroke-linecap="round" opacity="0.9"/>
-
-  <!-- 副标题 -->
-  <text x="82" y="278" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-        font-size="25" font-weight="600" fill="#4A3B2C">
-    给 AI 一个记性 —— 你说过的，它下次还记得
-  </text>
-
-  <!-- 痛点一行 -->
-  <text x="82" y="322" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-        font-size="18" fill="#7A6B58">
-    不用每次开新会话，都从零介绍一遍自己
-  </text>
-
-  <!-- 卖点胶囊 -->
-  <g transform="translate(80,366)" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-     font-size="15" font-weight="600">
-    <rect x="0"   y="0" width="122" height="38" rx="19" fill="#2E7A72" opacity="0.12"/>
-    <text x="61"  y="25" fill="#1F4E4A" text-anchor="middle">语义检索</text>
-
-    <rect x="134" y="0" width="122" height="38" rx="19" fill="#2E7A72" opacity="0.12"/>
-    <text x="195" y="25" fill="#1F4E4A" text-anchor="middle">自动抽取</text>
-
-    <rect x="268" y="0" width="122" height="38" rx="19" fill="#C04A1A" opacity="0.12"/>
-    <text x="329" y="25" fill="#8E3E1C" text-anchor="middle">本地私有</text>
-
-    <rect x="402" y="0" width="138" height="38" rx="19" fill="#2E7A72" opacity="0.12"/>
-    <text x="471" y="25" fill="#1F4E4A" text-anchor="middle">崩了自愈</text>
+  <!-- ============ VS 分隔 ============ -->
+  <g transform="translate(600,340)">
+    <circle cx="0" cy="0" r="30" fill="#FBF8F2" stroke="#E0D5C4" stroke-width="1.5"/>
+    <text x="0" y="8" text-anchor="middle" font-family="ui-sans-serif,-apple-system,sans-serif"
+          font-size="17" font-weight="800" fill="#A89880">VS</text>
   </g>
 
-  <!-- ================= 右侧：记忆流动示意 ================= -->
-  <g transform="translate(690,92)">
+  <!-- ============ 右：AFTER ============ -->
+  <g transform="translate(624,128)">
+    <rect x="0" y="0" width="524" height="440" rx="20" fill="#FFFFFF" opacity="0.9" stroke="#C04A1A" stroke-opacity="0.3"/>
+    <g transform="translate(26,26)">
+      <rect x="0" y="0" width="104" height="32" rx="16" fill="url(#warmG)"/>
+      <text x="52" y="21" text-anchor="middle" font-family="ui-sans-serif,-apple-system,sans-serif"
+            font-size="13.5" font-weight="800" fill="#FFFFFF" letter-spacing="1.4">AFTER</text>
+    </g>
+    <text x="26" y="90" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+          font-size="19" font-weight="800" fill="#2B2118">它记得你，从头到尾</text>
 
-    <!-- 卡片背景 -->
-    <rect x="0" y="0" width="436" height="300" rx="22" fill="#FFFFFF" opacity="0.66" filter="url(#lift)"/>
-
-    <!-- 一条对话 -->
-    <g transform="translate(28,30)">
-      <circle cx="15" cy="15" r="15" fill="url(#teal)" opacity="0.16"/>
-      <text x="15" y="20" text-anchor="middle" font-size="14" font-family="ui-sans-serif,-apple-system,'PingFang SC',sans-serif"
-            font-weight="700" fill="#1F4E4A">你</text>
-      <text x="42" y="20" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="16" fill="#3E3226">以后回答我都用中文</text>
+    <!-- 对话 1（同左） -->
+    <g transform="translate(26,116)">
+      <rect x="0" y="0" width="470" height="74" rx="13" fill="#FDF9F5" stroke="#C04A1A" stroke-opacity="0.14"/>
+      <circle cx="26" cy="24" r="14" fill="url(#warmG)" opacity="0.85"/>
+      <text x="26" y="29" text-anchor="middle" font-size="12" font-family="ui-sans-serif,sans-serif"
+            font-weight="700" fill="#FFFFFF">你</text>
+      <text x="50" y="29" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14.5" fill="#3E3226">以后回答我，都用中文。</text>
+      <!-- 抽取提示 -->
+      <g transform="translate(50,44)">
+        <circle cx="6" cy="6" r="3.5" fill="#2E7A72" opacity="0.75"/>
+        <text x="17" y="10" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+              font-size="11.5" fill="#2E7A72">已悄悄记住（你什么都不用做）</text>
+      </g>
     </g>
 
-    <!-- 向下流动的虚线 + 箭头 -->
-    <g transform="translate(43,78)">
-      <path d="M0 0 V 40" stroke="#C04A1A" stroke-width="2" stroke-dasharray="5 5" opacity="0.55"/>
-      <path d="M-5 34 L0 43 L5 34" fill="none" stroke="#C04A1A" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
-      <text x="14" y="26" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="13" fill="#A06A4A">后台自动抽取</text>
+    <!-- 记忆卡片（浮出） -->
+    <g transform="translate(46,198)">
+      <rect x="0" y="0" width="430" height="46" rx="11" fill="#C04A1A" opacity="0.11"/>
+      <rect x="0" y="0" width="4.5" height="46" rx="2.25" fill="url(#warmG)"/>
+      <text x="18" y="20" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="10.5" font-weight="800" fill="#8E3E1C" letter-spacing="0.9">偏好</text>
+      <text x="18" y="37" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="13.5" fill="#3E3226">用户偏好用中文回答</text>
     </g>
 
-    <!-- 记忆卡片 -->
-    <g transform="translate(28,132)">
-      <rect x="0" y="0" width="380" height="58" rx="13" fill="#C04A1A" opacity="0.10"/>
-      <rect x="0" y="0" width="5"  height="58" rx="2.5" fill="url(#terra)"/>
-      <text x="20" y="26" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="12.5" font-weight="700" fill="#8E3E1C" letter-spacing="0.8">偏好</text>
-      <text x="20" y="46" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="15.5" fill="#3E3226">用户偏好用中文回答</text>
+    <!-- 分隔 -->
+    <g transform="translate(26,258)">
+      <path d="M0 0 H 470" stroke="#E0D5C4" stroke-width="1.2" stroke-dasharray="5 5"/>
+      <circle cx="235" cy="0" r="16" fill="#FFFFFF"/>
+      <text x="235" y="5" text-anchor="middle" font-family="ui-sans-serif,-apple-system,'PingFang SC',sans-serif"
+            font-size="11.5" font-weight="700" fill="#B08A6A">三天后 · 新会话</text>
     </g>
 
-    <!-- 存入库 -->
-    <g transform="translate(28,206)">
-      <circle cx="9" cy="12" r="4.5" fill="#2E7A72" opacity="0.8"/>
-      <text x="24" y="17" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="13.5" fill="#6B5A47">存进本地向量库 · 387 条</text>
-    </g>
-
-    <!-- 三天后 -->
-    <g transform="translate(28,242)">
-      <path d="M0 0 H 380" stroke="#5A4632" stroke-width="1" opacity="0.16"/>
-      <text x="0" y="34" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="15" font-weight="700" fill="#1F4E4A">三天后，新会话</text>
-      <text x="150" y="34" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
-            font-size="14" fill="#8A7A66">它自动想起来了</text>
+    <!-- 对话 2 -->
+    <g transform="translate(26,290)">
+      <rect x="0" y="0" width="470" height="98" rx="13" fill="#FDF9F5" stroke="#C04A1A" stroke-opacity="0.14"/>
+      <circle cx="26" cy="24" r="14" fill="url(#warmG)" opacity="0.85"/>
+      <text x="26" y="29" text-anchor="middle" font-size="12" font-family="ui-sans-serif,sans-serif"
+            font-weight="700" fill="#FFFFFF">你</text>
+      <text x="50" y="29" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="14.5" fill="#3E3226">帮我写个 README。</text>
+      <g transform="translate(50,44)">
+        <circle cx="6" cy="6" r="3.5" fill="#1F4E4A" opacity="0.8"/>
+        <text x="17" y="10" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+              font-size="11.5" fill="#1F4E4A">自动想起你要中文，直接用中文写</text>
+      </g>
+      <text x="50" y="82" font-family="ui-sans-serif,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif"
+            font-size="12.5" font-weight="700" fill="#C04A1A">← 一个字都没重复说</text>
     </g>
   </g>
-
-  <!-- 右下角：极简品牌标记（不放个人署名，遵循 huashu-design 禁区） -->
-  <text x="1120" y="446" text-anchor="end"
-        font-family="ui-sans-serif,-apple-system,sans-serif"
-        font-size="13" fill="#A89880" letter-spacing="0.4">pi-web-extensions</text>
 </svg>
