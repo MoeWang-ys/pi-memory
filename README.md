@@ -175,82 +175,25 @@ cd pi-memory && pi-plugin pack .     # → dist/local.pi-memory-<ver>.piplug
 
 ```
 memory-server/       记忆引擎（核心，必需）
-├── providers.py     推理后端抽象层 ← 双后端的关键
-├── app.py           FastAPI 服务 + 全部端点
-├── extractor.py     抽取   embedder.py   向量化
-├── retrieval.py     检索   store.py      SQLite
-├── stability.py     模型自愈守护
-├── setup.py         交互向导
-├── install.sh       一键安装
-└── run.sh           守护启动器
-
 memory-extension/    pi CLI 前端
 pi-memory/           PI-Desktop 前端
+docs/                文档与配图
 ```
 
----
-
-## 常见问题
-
-<details><summary><b>服务起不来 / 端口被占用</b></summary>
-
-```bash
-lsof -tiTCP:8970 -sTCP:LISTEN | xargs -r kill -9 && nohup ./run.sh &
-```
-</details>
-
-<details><summary><b>macOS 报 <code>pydantic_core</code> 架构不匹配</b></summary>
-
-系统 Python 是 x86_64 混编但机器是 arm64。加 `arch -arm64` 前缀。`install.sh` 和 `run.sh` 已自动处理。
-</details>
-
-<details><summary><b>检索结果很差 / 搜不到</b></summary>
-
-按顺序排查：
-1. 向量模型是不是英文向的？（`nomic` 做中文）→ 换 `bge-m3`
-2. 维度匹配吗？看 `/api/health` 或启动日志
-3. 换过模型但没跑 `reembed.py`？
-4. 历史对话没处理过？→ `backfill.py`
-</details>
-
-<details><summary><b>报 502 / 连接被劫持</b></summary>
-
-系统代理把 `127.0.0.1` 也代理走了。代码已强制 `trust_env=False`，自己写脚本调用时记得同样处理。
-</details>
-
-<details><summary><b>模型被卸载（<code>Model is unloaded</code>）</b></summary>
-
-引擎自带守护线程，每 60 秒巡检、自动拉起。若还反复掉，把 `ttl_seconds` 设为 `0`（常驻）。
-
-历史踩坑：`ttl_seconds: 3600` 和 LM Studio 全局 `jitModelTTL`（1 小时）同时到期，导致每小时模型被卸了又拉。
-</details>
-
-<details><summary><b>抽取返回空 / 拿不到 JSON</b></summary>
-
-`max_tokens` 给小了。reasoning 型模型需要 `3000` 以上。
-</details>
-
----
-
-## 维护
-
-```bash
-./run.sh                    # 前台（崩溃自动重启）
-nohup ./run.sh &            # 后台常驻
-.venv/bin/python reembed.py # 重建索引（换向量模型后必须）
-.venv/bin/python backfill.py --min-chars 150 --chunk 12   # 补处理历史对话
-./install.sh                # 重新配置（自动备份旧配置）
-```
+各文件职责、常见问题、维护命令见 [docs/FAQ.md](docs/FAQ.md)。
 
 ---
 
 ## 为什么这样设计
 
 **为什么不用 AI 工具自带的模型配置？**
-自带的通常是你的主力模型，很贵。但**抽取是每轮对话都要跑的**——聊天是"一问一答"，抽取是"每轮后台都跑"，量级差很多。而且抽取只是信息分类，小模型足够。所以独立配置，但支持任意 OpenAI 兼容端点。
+自带的通常是你的主力模型，很贵。但**抽取是每轮对话都要跑的** —— 聊天是"一问一答"，抽取是"每轮后台都跑"，量级差很多。而且抽取只是信息分类，小模型足够。所以独立配置，但支持任意 OpenAI 兼容端点。
 
 **为什么 LM Studio 是"第一公民"？**
-它是唯一提供模型生命周期管理的（加载/常驻/自动拉起）——纯 API 端点没这能力。用云端时守护线程自动关闭，不做无用探测。
+它是唯一提供模型生命周期管理的（加载/常驻/自动拉起）—— 纯 API 端点没这能力。用云端时守护线程自动关闭，不做无用探测。
+
+**为什么抽取不在关键路径上？**
+早期抽取是同步的，模型推理几十秒到几分钟会占住整个服务，导致读记忆从 0.3 秒变成 33 秒。现在写入只入队（毫秒返回），由独立 worker 进程消费。详见 [QUEUE-MODE.md](memory-server/QUEUE-MODE.md)。
 
 ## License
 

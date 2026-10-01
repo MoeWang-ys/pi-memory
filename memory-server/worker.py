@@ -148,6 +148,9 @@ def main():
     purged = queue_db.purge_done()
     if purged:
         log.info(f"清理了 {purged} 条历史完成任务")
+    # 回收空闲页: 完成的任务虽然逻辑上已抹掉 payload, 但原始字节可能仍留在
+    # SQLite 空闲页里, 需要 VACUUM 才能真正覆写。启动时做一次即可。
+    queue_db.vacuum()
 
     cfg = load_config()
     w = Worker(cfg)

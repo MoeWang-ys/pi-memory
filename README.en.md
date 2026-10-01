@@ -174,83 +174,34 @@ Install that file in PI-Desktop. Supports `recall` / `search` / `remember` / `ex
 ## Layout
 
 ```
-memory-server/       the engine (core, required)
-├── providers.py     inference backend abstraction ← the dual-backend key
-├── app.py           FastAPI service + all endpoints
-├── extractor.py     extraction    embedder.py    embedding
-├── retrieval.py     retrieval     store.py       SQLite
-├── stability.py     model self-healing daemon
-├── setup.py         interactive wizard
-├── install.sh       one-command install
-└── run.sh           watchdog launcher
-
+memory-server/       memory engine (core, required)
 memory-extension/    pi CLI frontend
 pi-memory/           PI-Desktop frontend
+docs/                docs and diagrams
 ```
+
+Per-file details, troubleshooting, and maintenance commands live in
+[docs/FAQ.md](docs/FAQ.md).
 
 ---
 
-## FAQ
+## Why it's built this way
 
-<details><summary><b>Service won't start / port already in use</b></summary>
+**Why not reuse your main model for extraction?**
+Because you'd be paying flagship prices for a classification task. Chat is one request per turn;
+extraction runs in the background on *every* turn — very different volume. Extraction only sorts
+information into categories, so a small model is enough. It's configured separately, but works with
+any OpenAI-compatible endpoint.
 
-```bash
-lsof -tiTCP:8970 -sTCP:LISTEN | xargs -r kill -9 && nohup ./run.sh &
-```
-</details>
+**Why is LM Studio a first-class citizen?**
+It's the only backend that manages model lifecycle (load / keep-resident / auto-revive) — plain API
+endpoints can't do that. When you use a cloud provider, the watchdog thread disables itself rather
+than probing pointlessly.
 
-<details><summary><b>macOS: <code>pydantic_core</code> architecture mismatch</b></summary>
-
-Your system Python is x86_64 but the machine is arm64. Prefix with `arch -arm64`. Both `install.sh` and `run.sh` handle this automatically.
-</details>
-
-<details><summary><b>Retrieval is bad / nothing is found</b></summary>
-
-In order:
-1. Is your embedding model English-oriented? (`nomic` for Chinese) → switch to `bge-m3`
-2. Do the dimensions match? Check `/api/health` or the startup log
-3. Changed models without running `reembed.py`?
-4. Never processed your history? → `backfill.py`
-</details>
-
-<details><summary><b>502 / connections being hijacked</b></summary>
-
-A system proxy is routing `127.0.0.1` too. The code forces `trust_env=False`; do the same if you write your own client.
-</details>
-
-<details><summary><b><code>Model is unloaded</code></b></summary>
-
-A self-healing daemon polls every 60s and reloads it. If it still flaps, set `ttl_seconds` to `0` (resident).
-
-Past incident: `ttl_seconds: 3600` and LM Studio's global `jitModelTTL` (1 hour) expired together, so the model was unloaded and reloaded every hour.
-</details>
-
-<details><summary><b>Extraction returns empty / no JSON</b></summary>
-
-`max_tokens` is too small. Reasoning models need `3000`+ or the JSON gets truncated.
-</details>
-
----
-
-## Maintenance
-
-```bash
-./run.sh                    # foreground (auto-restart on crash)
-nohup ./run.sh &            # background, persistent
-.venv/bin/python reembed.py # rebuild index (required after changing embedding model)
-.venv/bin/python backfill.py --min-chars 150 --chunk 12   # process conversation history
-./install.sh                # reconfigure (backs up the old config)
-```
-
----
-
-## Design notes
-
-**Why not reuse the AI tool's own model config?**
-That's usually your flagship model — expensive. But **extraction runs on every turn**: chatting is "ask once, answer once", extraction is "runs in the background every turn". Different order of magnitude. And extraction is just information classification — a small model is plenty. So it's a separate config, but it supports any OpenAI-compatible endpoint.
-
-**Why is LM Studio a "first-class citizen"?**
-It's the only backend offering model lifecycle management (load / keep resident / auto-reload) — a bare API endpoint can't do that. Under a cloud provider the watchdog daemon shuts itself off rather than doing pointless probing.
+**Why isn't extraction on the critical path?**
+It used to be synchronous: a 60–200s inference would occupy the whole service and stretch a memory
+read from 0.3s to 33s. Now writes only enqueue (millisecond return) and a separate worker process
+consumes them. See [QUEUE-MODE.md](memory-server/QUEUE-MODE.md).
 
 ## License
 

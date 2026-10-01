@@ -131,8 +131,13 @@ def finish(tid: int, error: str = ""):
                     (error[:500], tid),
                 )
         else:
+            # 任务成功 → 抹掉原始对话内容。
+            # payload 是完整的原始对话，可能含凭据/隐私；抽完就没用了，
+            # 留着只会让敏感数据长期驻盘（甚至会随备份/仓库外流）。
+            # 2026-10-01: 实测在 queue 里发现了明文 GitHub token 才加的这一手。
             conn.execute(
-                "UPDATE extract_queue SET status='done', error='', finished_at=? WHERE id=?",
+                "UPDATE extract_queue SET status='done', error='', finished_at=?, payload='[]' "
+                "WHERE id=?",
                 (time.time(), tid),
             )
     finally:
@@ -190,3 +195,20 @@ def stats() -> dict:
 if __name__ == "__main__":
     init_db()
     print("extract_queue 已就绪:", stats())
+
+
+def vacuum():
+    """回收空闲页 —— 让 SQLite 真正覆写已删除数据的字节。
+
+    finish() 会把完成任务的 payload 抹成 '[]'，但 SQLite 的页管理不会立刻
+    覆写磁盘上的旧字节，明文可能仍残留在空闲页里。VACUUM 会重建整库。
+    2026-10-01: 在 queue 里发现明文 token 残留后加的这一手。
+    """
+    conn = _conn()
+    try:
+        conn.execute("VACUUM")
+        return True
+    except Exception:
+        return False
+    finally:
+        conn.close()

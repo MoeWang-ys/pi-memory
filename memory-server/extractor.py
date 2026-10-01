@@ -22,6 +22,12 @@ EXTRACT_PROMPT = (
     "- 无法脱离本次对话上下文理解的碎片（如“用户名为 gavin”这种顺手提到的）\n"
     "- 你（助手）自己做的事/说的话，只记用户侧的信息\n"
     "\n"
+    "【安全红线】以下内容一律不得抽取（即使看起来像 fact/preference）:\n"
+    "- 任何凭据: API key、token、密码、口令、私钥、连接串、Bearer 值\n"
+    "- 形如 ghp_/sk-/AKIA/xoxb-/AIza 等开头的密钥字符串\n"
+    "- 身份证号、银行卡号、手机号等敏感个人信息\n"
+    "记忆库会被保留并注入后续会话，写入凭据等于把钥匙抄进日记。\n"
+    "\n"
     "规则：\n"
     "1. 只输出 JSON 数组，每个元素为 {{\"category\": \"fact|preference|goal|decision\", \"content\": \"简短中文描述\"}}\n"
     "2. content 必须自包含: 脱离本对话也能读懂(把“它/这个”换成具体对象)\n"
@@ -34,6 +40,59 @@ EXTRACT_PROMPT = (
 
 
 VALID_CATEGORIES = ("fact", "preference", "goal", "decision")
+
+# ── 敏感信息过滤 ────────────────────────────────────────────────
+# 提示词里已经要求"不得抽凭据", 但模型不一定听 —— 这里做第二道拦截,
+# 因为漏一个 token 进记忆库的代价很高: 记忆会持久保存、注入后续会话。
+# 2026-10-01 新增: 起因是一个 GitHub token 真被抽成了 [fact]。
+_SENSITIVE_PATTERNS = [
+    # 常见密钥前缀
+    r"\bghp_[A-Za-z0-9]{16,}",          # GitHub PAT (classic)
+    r"\bgithub_pat_[A-Za-z0-9_]{20,}",  # GitHub PAT (fine-grained)
+    r"\bsk-[A-Za-z0-9_-]{16,}",          # OpenAI / Anthropic
+    r"\bAKIA[0-9A-Z]{16}\b",             # AWS Access Key
+    r"\bxox[baprs]-[A-Za-z0-9-]{10,}",   # Slack
+    r"\bAIza[0-9A-Za-z_-]{30,}",         # Google API key
+    r"\bglpat-[A-Za-z0-9_-]{16,}",       # GitLab PAT
+    r"\bnpm_[A-Za-z0-9]{30,}",           # npm token
+    r"\bsk_live_[A-Za-z0-9]{16,}",       # Stripe
+    # 私钥块
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
+    # 带标签的凭据（中英文）
+    r"(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*\S{6,}",
+    r"(?:密码|口令|密钥|令牌|私钥)\s*[:=：]\s*\S{4,}",
+    r"Bearer\s+[A-Za-z0-9._-]{20,}",
+    # 中国身份证 (18 位) / 银行卡 (16-19 位纯数字)
+    r"\b[1-9]\d{5}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]\b",
+]
+_SENSITIVE_RE = re.compile("|".join(_SENSITIVE_PATTERNS), re.IGNORECASE)
+
+
+def is_sensitive(text: str) -> bool:
+    """内容里是否含凭据/敏感个人信息。用于入库前拦截。"""
+    t = text or ""
+    if not t:
+        return False
+    if _SENSITIVE_RE.search(t):
+        return True
+    # 未知格式的密钥: 必须同时满足
+    #   ① 出现"密钥类词"
+    #   ② 出现一段长得像密钥的随机串（不能是路径/URL）
+    # 早期版本只要求"长串+关键词"，结果把含 /Users/gavin/... 的普通记忆
+    # 和长中文段落误杀了（实测 7/440 误报），所以收紧到只认真正的
+    # base64/hex 随机串，且排除路径与 URL。
+    # 注意: 不能用 \b 包裹中文 —— CJK 字符两侧都不构成词边界，
+    # \b密钥\b 永远匹配不上（实测踩过这个坑）。
+    if not re.search(r"(?:api[_\s-]?key|access[_\s-]?token|secret|密钥|令牌|凭据)", t, re.IGNORECASE):
+        return False
+    for cand in re.findall(r"[A-Za-z0-9+/=_-]{32,}", t):
+        if cand.startswith(("/", "http", "~"), ) or "/" in cand or "." in cand:
+            continue                      # 路径 / 域名 / 文件名，不是密钥
+        if re.fullmatch(r"[A-Fa-f0-9]{32,}", cand):
+            return True                   # 纯 hex（MD5/SHA/密钥）
+        if re.search(r"[a-z]", cand) and re.search(r"[A-Z]", cand) and re.search(r"\d", cand):
+            return True                   # 大小写+数字混排 = 典型密钥
+    return False
 
 
 def _norm_category(raw: str | None) -> str:
@@ -126,6 +185,16 @@ class Extractor:
         items = [it for it in _parse_json(raw) if it.get("content")]
         for it in items:
             it["category"] = _norm_category(it.get("category"))
+        # 第二道拦截: 模型不听提示词时, 代码兜底滤掉凭据
+        safe, blocked = [], 0
+        for it in items:
+            if is_sensitive(it.get("content", "")):
+                blocked += 1
+                continue
+            safe.append(it)
+        if blocked:
+            print(f"[extractor] 已拦截 {blocked} 条疑似凭据/敏感信息（不入库）")
+        items = safe
         if not items:
             print(f"[extractor] 抽取为空 raw={raw[:200]!r}")
         return items
