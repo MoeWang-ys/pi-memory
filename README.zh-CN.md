@@ -59,7 +59,7 @@ pi install npm:pi-memory
 
 postinstall 脚本会自己找 Python、建虚拟环境、装依赖，然后跑一个**交互式向导**：探测你机器上有什么（LM Studio / Ollama / 云端），把能用的模型列出来让你选，实测维度、验证连通，最后写好配置。
 
-npm 包里是 pi 扩展 + skills。**引擎**（Python 服务）在主仓库里 —— postinstall 脚本会自动找到你克隆的引擎目录，没找到就告诉你克隆命令。
+npm 包里是 pi 扩展。**引擎**（Python 服务）在主仓库里 —— postinstall 脚本会自动找到你克隆的引擎目录，没找到就告诉你克隆命令。
 
 然后启动引擎（脚本会打印确切路径）：
 
@@ -186,8 +186,6 @@ memory-server/       记忆引擎（核心，必需）
 
 memory-extension/    pi CLI 前端
 pi-memory/           PI-Desktop 前端
-tts-server/          语音合成（独立组件）
-wal-extension/       其他扩展（独立组件）
 ```
 
 ---

@@ -66,3 +66,13 @@ docs/preview.html
 # ---------- npm ----------
 node_modules/
 *.tgz
+
+# ---------- 非 memory 的本地组件 ----------
+# 这些目录只存在于本机（个人环境用），不属于 pi-memory 的发布内容。
+# 用 git rm --cached 从仓库移除后，靠这里保证不会再被 git add 回去。
+tts-server/
+wal-extension/
+skills/
+scripts/install.sh
+scripts/pi-web-cmd-enter.user.js
+scripts/pi-web-tts.user.js
