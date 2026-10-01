@@ -13,13 +13,13 @@
     "记忆",
     "跨会话记忆"
   ],
-  "homepage": "https://github.com/MoeWang-ys/pi-web-extensions#readme",
+  "homepage": "https://github.com/MoeWang-ys/pi-memory#readme",
   "bugs": {
-    "url": "https://github.com/MoeWang-ys/pi-web-extensions/issues"
+    "url": "https://github.com/MoeWang-ys/pi-memory/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MoeWang-ys/pi-web-extensions.git"
+    "url": "git+https://github.com/MoeWang-ys/pi-memory.git"
   },
   "license": "MIT",
   "author": "MoeWang-ys",

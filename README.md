@@ -59,7 +59,7 @@ pi install npm:pi-memory
 
 The postinstall script finds Python, creates a virtualenv, installs dependencies, then runs an **interactive wizard**: it probes what's on your machine (LM Studio / Ollama / cloud), lists the available models for you to pick, measures the real embedding dimension, verifies connectivity, and writes the config.
 
-The npm package ships the pi extension. The **engine** (a Python service) lives in the [main repo](https://github.com/MoeWang-ys/pi-web-extensions) — the postinstall script locates it if you already cloned it, and tells you the clone command if you haven't.
+The npm package ships the pi extension. The **engine** (a Python service) lives in the [main repo](https://github.com/MoeWang-ys/pi-memory) — the postinstall script locates it if you already cloned it, and tells you the clone command if you haven't.
 
 Then start the engine (the script prints the exact path):
 
@@ -70,8 +70,8 @@ cd <engine-dir> && nohup ./run.sh &
 ### Option B: from source
 
 ```bash
-git clone https://github.com/MoeWang-ys/pi-web-extensions.git
-cd pi-web-extensions/memory-server
+git clone https://github.com/MoeWang-ys/pi-memory.git
+cd pi-memory/memory-server
 ./install.sh
 ```
 

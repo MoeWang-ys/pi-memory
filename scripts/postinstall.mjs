@@ -39,6 +39,10 @@ function findEngine() {
     join(HERE, "..", "memory-server"),
     join(HERE, ".."),
     // 常见克隆位置
+    // 新名字(仓库 2026-10-01 改名为 pi-memory)优先
+    join(HOME, "Document/pi/pi-memory/memory-server"),
+    join(HOME, "pi-memory/memory-server"),
+    // 旧名字: 本地已有克隆的人仍然有效，不要删
     join(HOME, "Document/pi/pi-web-extensions/memory-server"),
     join(HOME, "pi-web-extensions/memory-server"),
   ].filter(Boolean);
@@ -102,8 +106,8 @@ function main() {
     warn("这个 npm 包只含 JS 那一半（pi 扩展 + skill）。");
     warn("引擎是 Python 服务，需要单独获取。\n");
     console.log(`  ${C.b}获取引擎：${C.n}`);
-    dim("git clone https://github.com/MoeWang-ys/pi-web-extensions.git");
-    dim("cd pi-web-extensions/memory-server && ./install.sh");
+    dim("git clone https://github.com/MoeWang-ys/pi-memory.git");
+    dim("cd pi-memory/memory-server && ./install.sh");
     console.log();
     dim("装好后重新跑：npx pi-memory-setup");
     dim("或指定路径：PI_MEMORY_HOME=/path/to/memory-server npx pi-memory-setup");

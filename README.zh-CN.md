@@ -70,8 +70,8 @@ cd <引擎目录> && nohup ./run.sh &
 ### 方式 B：从源码
 
 ```bash
-git clone https://github.com/MoeWang-ys/pi-web-extensions.git
-cd pi-web-extensions/memory-server
+git clone https://github.com/MoeWang-ys/pi-memory.git
+cd pi-memory/memory-server
 ./install.sh
 ```
 
